@@ -5,7 +5,6 @@ public class CanEatEnemies : MonoBehaviour
 {
 	void Start()
 	{
-	
 	}
 	
 	void Update()
