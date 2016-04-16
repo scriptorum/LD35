@@ -86,6 +86,11 @@ namespace Spewnity
 			return arr[Random.Range(0, arr.Length)];
 		}
 
+		public static bool CoinFlip()
+		{
+			return (Random.value >= 0.5f);
+		}
+
 		// Swaps two values, just awful, I hate myself for writing it
 		public static void Swap<T>(ref T a, ref T b)
 		{

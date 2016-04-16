@@ -2,7 +2,7 @@
 using System.Collections;
 using Spewnity;
 
-public class Player : MonoBehaviour
+public class PlayerView : MonoBehaviour
 {
 	public static float ACCELERATION = 8f;
 	public static float SLOW_FACTOR = 2f;
@@ -39,12 +39,16 @@ public class Player : MonoBehaviour
 		// Speed up (or hard brake) - player controls velocity change
 		else
 		{
+			// Adjust velocity
 			velocity += evt.axis.x * ACCELERATION * Time.deltaTime;
+
+			// Enforce maximum velocity
 			float absVelocity = Mathf.Abs(velocity);
 			float signVelocity = Mathf.Sign(velocity);
-
 			if(absVelocity > MAX_VELOCITY)
 				velocity = signVelocity * MAX_VELOCITY;
+
+			// Change facing if moving fast enough, otherwise assume old facing
 			if(absVelocity > MIN_VELOCITY)
 				facing = signVelocity;
 		}
