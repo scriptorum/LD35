@@ -5,7 +5,7 @@ public class HunterView : MonoBehaviour
 {
 	private static float SLOW_FACTOR = 2f;
 	public static float ACCELERATION = 8f;
-	public static float MIN_VELOCITY = 1f;
+	public static float MIN_VELOCITY = 0.5f;
 	public static float MAX_VELOCITY = 5f;
 	public bool moving = false;
 	public float facing = -1.0f;

@@ -34,7 +34,7 @@ public class CanHear : MonoBehaviour
 
 //		Debug.Log(eb.gameObject.name + " is experiencing " + anxiety + " anxiety facing " + pathToNoise.x);
 
-		// Suffer the anxiety
-		eb.addAnxiety(anxiety, pathToNoise.x);
+		// Register the noise heard
+		eb.heardNoise(anxiety, pathToNoise.x);
 	}
 }

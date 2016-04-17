@@ -13,6 +13,8 @@ public class EnemyBehavior : MonoBehaviour
 	private float targetAnxiety = 0f;
 	private float stateTimer = 0f;
 	private float lastRange;
+	private float endDirection = -1f;
+	private float startDirection = 1f;
 	private Vector3 lastPlayerSighting;
 	private Vector3 lastNoiseHeard;
 	private EnemyView view;
@@ -21,7 +23,6 @@ public class EnemyBehavior : MonoBehaviour
 	public string currentState;
 	private AnxietyGroup lastAnxietyGroup;
 	private bool stateIsInitializing = true;
-	public float bravery = 0.5f;
 	public bool armed = false;
 	public float anxietyDropRate = 2f;
 	public float speedModifier = 1f;
@@ -48,10 +49,10 @@ public class EnemyBehavior : MonoBehaviour
 		{
 			if(anxietyGroup == AnxietyGroup.Calm) switchState(walkingState);
 
-			if(anxietyGroup == AnxietyGroup.Worried) if(bravery > Random.value) switchState(searchingState);
+			if(anxietyGroup == AnxietyGroup.Worried) if(armed) switchState(searchingState);
 			else switchState(nervousState);
 
-			if(anxietyGroup == AnxietyGroup.Alarmed) if(bravery > Random.value) switchState(fightingState);
+			if(anxietyGroup == AnxietyGroup.Alarmed) if(armed) switchState(fightingState);
 			else switchState(fleeingState);
 		}
 		
@@ -64,6 +65,7 @@ public class EnemyBehavior : MonoBehaviour
 
 	public void setMovement(float speed)
 	{
+		// Adjust speed modifier to make some folks slower or faster
 		view.setMovement(speed * speedModifier);
 	}
 
@@ -107,8 +109,13 @@ public class EnemyBehavior : MonoBehaviour
 	{
 //		Debug.Log("Spotted player!!!");
 		lastPlayerSighting = playerGO.transform.position;
-
 		addAnxiety(MAX_ANXIETY, range);
+	}
+
+	public void heardNoise(float amount, float range)
+	{
+//		lastNoiseHeard = Noise noise
+		addAnxiety(amount, range);
 	}
 
 	public void addAnxiety(float amount, float range)
@@ -124,7 +131,7 @@ public class EnemyBehavior : MonoBehaviour
 		if(stateIsInitializing)
 		{ 
 			view.setTint(Color.white);
-			setMovement(-1f); // walking toward base
+			setMovement(endDirection); // walking toward base
 			stateTimer = Random.Range(2f, 20f);
 			return;
 		}
@@ -156,7 +163,7 @@ public class EnemyBehavior : MonoBehaviour
 		{
 			NoiseManager.instance.addNoise("nervous", gameObject);
 			view.setTint(Color.green);
-			view.stand(1f); // face away
+			view.stand(startDirection); // face away
 			stateTimer = Random.Range(0.0f, 2.0f);
 		}
 
@@ -169,7 +176,7 @@ public class EnemyBehavior : MonoBehaviour
 		if(stateIsInitializing)
 		{			
 			view.setTint(Color.green);
-			setMovement(-1f); // look towards
+			setMovement(endDirection); // look towards
 			stateTimer = Random.Range(2.0f, 6.0f);
 		}
 
@@ -184,7 +191,7 @@ public class EnemyBehavior : MonoBehaviour
 			NoiseManager.instance.addNoise("searching", gameObject);
 			view.setTint(Color.green);
 			view.stand(-lastRange);
-			stateTimer = Random.Range(1f, 3f);
+			stateTimer = Random.Range(startDirection, 3f);
 			return;
 		}
 

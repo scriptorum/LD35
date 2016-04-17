@@ -29,7 +29,7 @@ public class EnemyVision : MonoBehaviour
 		Vector3 pathToNoise = other.transform.position - transform.position;
 		float dist = pathToNoise.magnitude;
 
-		Debug.Log(gameObject.name + " spotted player at " + dist);
+//		Debug.Log(gameObject.name + " spotted player at " + dist);
 
 		// Notify enemy behavior
 		eb.spottedPlayer(other.gameObject, dist);
