@@ -21,17 +21,18 @@ public class EnemyView : MonoBehaviour
 	private SpriteRenderer eyesSR;
 	private SpriteRenderer mouthSR;
 	private BoxCollider2D visionCollider;
+	private Eyes eyes;
 
 	void Awake()
 	{
 		bodySR = transform.Find("Body").GetComponent<SpriteRenderer>();
-		eyesSR = transform.Find("Face/Eyes").GetComponent<SpriteRenderer>();
+		eyes = transform.Find("Face/Eyes").GetComponent<Eyes>();
 		mouthSR = transform.Find("Face/Mouth").GetComponent<SpriteRenderer>();
 		visionCollider = transform.Find("Vision").GetComponent<BoxCollider2D>();
 
 		bodySR.sortingOrder = sortingOrder++;
-		eyesSR.sortingOrder = sortingOrder++;
 		mouthSR.sortingOrder = sortingOrder++;
+		eyes.setSortingOrder(sortingOrder++);
 
 		Debug.Assert(bodySR != null);
 		Debug.Assert(visionCollider != null);
@@ -57,7 +58,8 @@ public class EnemyView : MonoBehaviour
 	private void setFacing(bool flipped) // flipped means left
 	{
 		// Set facing of face sprite
-		eyesSR.flipX = mouthSR.flipX = flipped;
+		eyes.setFlipped(flipped);
+		mouthSR.flipX = flipped;
 		this.flipped = flipped;
 
 		// Set position of vision cone
@@ -121,27 +123,10 @@ public class EnemyView : MonoBehaviour
 
 		mouthSR.sprite = sprite;
 	}
+
 	public void setEyes(EyeType type)
 	{
-		Sprite sprite = null;
-		switch(type)
-		{
-			case EyeType.Calm:
-				sprite = eyesCalm;
-				break;
-			case EyeType.Closed:
-				sprite = eyesClosed;
-				break;
-			case EyeType.Open:
-				sprite = eyesOpen;
-				break;
-			case EyeType.Squint:
-				sprite = eyesSquint;
-				break;
-			default: throw new UnityException("WTF");
-		}
-
-		eyesSR.sprite = sprite;
+		eyes.setEyes(type);
 	}
 }
 
@@ -153,10 +138,3 @@ public enum MouthType
 	Smile
 }
 		
-public enum EyeType
-{
-	Closed,
-	Calm,
-	Squint,
-	Open
-}
