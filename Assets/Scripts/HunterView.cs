@@ -11,10 +11,12 @@ public class HunterView : MonoBehaviour
 	public float facing = -1.0f;
 	public float velocity = 0;
 	private SpriteRenderer faceSR;
+	private ParticleSystem bloodspray;
 
 	void Awake()
 	{
 		faceSR = transform.Find("Face").GetComponent<SpriteRenderer>();
+		bloodspray = transform.Find("Bloodspray").GetComponent<ParticleSystem>();
 	}
 
 	void Update()
@@ -53,5 +55,21 @@ public class HunterView : MonoBehaviour
 			facing = signVelocity;
 
 		return true;
+	}
+
+	public void hurt()
+	{
+		bloodspray.Emit(10);
+	}
+
+	public void die()
+	{
+		// TODO Replace with death animation, culminating in dead circle
+//		GameObject.Destroy(gameObject);
+		Debug.Log("TODO: You died");
+		bloodspray.Emit(100);
+
+		GameObject.Destroy(gameObject.GetComponent<PlayerController>());
+		GameObject.Destroy(gameObject.GetComponent<Hunter>());
 	}
 }

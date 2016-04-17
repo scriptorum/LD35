@@ -7,8 +7,10 @@ public class EnemyView : MonoBehaviour
 	public static float MIN_VELOCITY = 0.3f;
 	public float velocity = 0f;
 	public float targetVelocity = 0f;
+	public bool flipped;
 	private SpriteRenderer faceSR;
 	private BoxCollider2D visionCollider;
+	public GameObject bulletPrefab;
 
 	void Awake()
 	{
@@ -40,6 +42,7 @@ public class EnemyView : MonoBehaviour
 	{
 		// Set facing of face sprite
 		faceSR.flipX = flipped;
+		this.flipped = flipped;
 
 		// Set position of vision cone
 		if(visionCollider)
@@ -69,5 +72,17 @@ public class EnemyView : MonoBehaviour
 	public void setTint(Color color)
 	{
 		faceSR.color = color;
+	}
+
+	public void fireGun()
+	{
+		// TODO Raise Gun
+
+		// Shoot bullet
+		GameObject go = (GameObject) Instantiate(bulletPrefab, transform.position, Quaternion.identity);
+
+		// Firebullet
+		Bullet bullet = go.GetComponent <Bullet>();
+		bullet.fire(flipped);
 	}
 }

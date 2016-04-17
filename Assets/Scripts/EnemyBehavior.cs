@@ -9,13 +9,15 @@ public class EnemyBehavior : MonoBehaviour
 	public static float ALARM_THRESHOLD = 10f;
 	public static float MAX_ANXIETY = 14f;
 	public static float ANXIETY_GROWTH = 0.5f;
+	public static float TIME_UNTIL_FORGET_TARGET = 5f;
 	private float anxiety = 0f;
 	private float targetAnxiety = 0f;
 	private float stateTimer = 0f;
 	private float lastRange;
 	private float endDirection = -1f;
 	private float startDirection = 1f;
-	private Vector3 lastPlayerSighting;
+	private float targetTimer;
+	private System.Nullable<Vector3> lastPlayerSighting;
 	private Vector3 lastNoiseHeard;
 	private EnemyView view;
 	private  AnxietyGroup anxietyGroup;
@@ -39,6 +41,10 @@ public class EnemyBehavior : MonoBehaviour
 
 	void Update()
 	{
+		targetTimer -= Time.deltaTime;
+		if(targetTimer <= 0)
+			lastPlayerSighting = null;
+		
 		if(anxiety != targetAnxiety) anxiety = Mathf.Lerp(anxiety, targetAnxiety, Time.deltaTime * ANXIETY_GROWTH);
 
 		lastAnxietyGroup = anxietyGroup;
@@ -109,6 +115,7 @@ public class EnemyBehavior : MonoBehaviour
 	{
 //		Debug.Log("Spotted player!!!");
 		lastPlayerSighting = playerGO.transform.position;
+		targetTimer  = TIME_UNTIL_FORGET_TARGET;
 		addAnxiety(MAX_ANXIETY, range);
 	}
 
@@ -122,6 +129,18 @@ public class EnemyBehavior : MonoBehaviour
 	{
 		targetAnxiety = Mathf.Min(MAX_ANXIETY, targetAnxiety + amount);
 		lastRange = range;
+	}
+
+	public float getTargetRange()
+	{
+		if(lastPlayerSighting != null)
+		{
+			Vector3 pathToTarget = (Vector3) lastPlayerSighting - transform.position;
+			float dist = pathToTarget.magnitude;
+			return dist;
+		}
+
+		return lastRange;
 	}
 
 	//====================================================================================
@@ -190,7 +209,7 @@ public class EnemyBehavior : MonoBehaviour
 		{
 			NoiseManager.instance.addNoise("searching", gameObject);
 			view.setTint(Color.green);
-			view.stand(-lastRange);
+			view.stand(-getTargetRange());
 			stateTimer = Random.Range(startDirection, 3f);
 			return;
 		}
@@ -204,12 +223,12 @@ public class EnemyBehavior : MonoBehaviour
 		if(stateIsInitializing)
 		{			
 			view.setTint(Color.green);
-			setMovement(0.5f * Mathf.Sign(lastRange)); // walk slowly toward noise
+			setMovement(0.5f * Mathf.Sign(getTargetRange())); // walk slowly toward noise
 			stateTimer = Random.Range(2.0f, 6.0f);
 		}
 
 		stateTimer -= Time.deltaTime;
-		if(stateTimer <= 0) switchState(nervousState);
+		if(stateTimer <= 0) switchState(searchingState);
 	}
 
 
@@ -224,17 +243,30 @@ public class EnemyBehavior : MonoBehaviour
 		}
 	}
 
+	public static float MIN_FIRING_RANGE = 3f;
+	public static float MAX_FIRING_RANGE = 8f;
 	public void fightingState()
 	{
 		if(stateIsInitializing)
 		{
 			if(anxietyGroup != lastAnxietyGroup) NoiseManager.instance.addNoise("fighting", gameObject);
 			view.setTint(Color.red);
-			setMovement(1.2f * Mathf.Sign(lastRange)); // walk quickly toward noise
-			stateTimer = lastRange / 1.2f;
+			float range = getTargetRange();
+
+			// Move closer?
+			if(range > MIN_FIRING_RANGE)
+				setMovement(1.2f * Mathf.Sign(getTargetRange())); // walk quickly toward noise
+			else view.stand();
+
+			// Fire gun?
+			if(range < MAX_FIRING_RANGE && lastPlayerSighting != null)
+			{
+				NoiseManager.instance.addNoise("gunshot", gameObject);
+				view.fireGun();
+			}
+
+			stateTimer = Random.Range(.35f, 1f);
 			return;
-			// TODO If you SEE circle, make circle position your target instead of last noise
-			// TODO Fire fire fire!!
 		}
 
 		stateTimer -= Time.deltaTime;

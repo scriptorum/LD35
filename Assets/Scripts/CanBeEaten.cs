@@ -18,7 +18,7 @@ public class CanBeEaten : MonoBehaviour
 
 	void OnTriggerEnter2D(Collider2D other)
 	{ 		
-		var canEatEnemies = other.GetComponent<CanEatEnemies>();
+		var canEatEnemies = other.GetComponent<Hunter>();
 		if(canEatEnemies == null)
 			return;
 

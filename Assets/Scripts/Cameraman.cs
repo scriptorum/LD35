@@ -23,6 +23,8 @@ public class Cameraman : MonoBehaviour
 	{
 		if(altTarget == null)
 		{
+			if(player == null)
+				return;
 			Vector3 pos = transform.position;
 			pos.x = player.transform.position.x + playerOffset * Mathf.Sign(player.facing);
 			transform.position = Vector3.Lerp(transform.position, pos, CAMERA_SPEED * Time.deltaTime);

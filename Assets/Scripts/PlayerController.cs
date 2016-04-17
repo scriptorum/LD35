@@ -5,21 +5,21 @@ using Spewnity;
 public class PlayerController : MonoBehaviour
 {
 	private HunterView view;
-	private CanEatEnemies canEatEnemies;
+	private Hunter hunter;
 
 	public void Awake()
 	{
 		view = gameObject.GetComponent<HunterView>();
-		canEatEnemies = gameObject.GetComponent<CanEatEnemies>();
+		hunter = gameObject.GetComponent<Hunter>();
 	}
 
 	public void onMovement(InputEvent evt)
 	{
 		// No motion - slow down player gradually
 		if(evt.axis.x == 0)
-			canEatEnemies.isMoving = view.decelerate();
+			hunter.isMoving = view.decelerate();
 
 		// Speed up (or hard brake) - player controls velocity change
-		else canEatEnemies.isMoving = view.accelerate(evt.axis.x);
+		else hunter.isMoving = view.accelerate(evt.axis.x);
 	}
 }

@@ -13,7 +13,7 @@ public class EnemyVision : MonoBehaviour
 
 	void OnTriggerStay2D(Collider2D other)
 	{ 				
-		var canEatEnemies = other.GetComponent<CanEatEnemies>();
+		var canEatEnemies = other.GetComponent<Hunter>();
 		if(canEatEnemies == null) return; // Vision cone only collides with player 
 
 		// A moving player is not visible (unless they get caught)
@@ -26,8 +26,8 @@ public class EnemyVision : MonoBehaviour
 		canEatEnemies.spotted();
 
 		// Determine target position and distance
-		Vector3 pathToNoise = other.transform.position - transform.position;
-		float dist = pathToNoise.magnitude;
+		Vector3 pathToHunter = other.transform.position - transform.position;
+		float dist = pathToHunter.magnitude;
 
 //		Debug.Log(gameObject.name + " spotted player at " + dist);
 
