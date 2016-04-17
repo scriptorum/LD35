@@ -32,7 +32,7 @@ public class CanHear : MonoBehaviour
 //		Debug.Log("Noise triggered. Actor:" + gameObject.name + " Distance:" + dist + " BaseVolume:" + noise.volume + " BaseAnxiety: " + noise.anxiety +
 //			" VolumeMod:" + volumeMod + " FinalAnxiety:" + anxiety);
 
-		Debug.Log(eb.gameObject.name + " is experiencing " + anxiety + " anxiety facing " + pathToNoise.x);
+//		Debug.Log(eb.gameObject.name + " is experiencing " + anxiety + " anxiety facing " + pathToNoise.x);
 
 		// Suffer the anxiety
 		eb.addAnxiety(anxiety, pathToNoise.x);

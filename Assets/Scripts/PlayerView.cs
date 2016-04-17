@@ -11,16 +11,18 @@ public class PlayerView : MonoBehaviour
 	public bool moving = false;
 	public float facing = -1.0f;
 	public float velocity = 0;
-
+	private SpriteRenderer sr;
 
 	void Awake()
 	{
+		sr = gameObject.GetComponent<SpriteRenderer>();
 	}
 
 	void Update()
 	{						
 		// Update position
 		transform.Translate(Vector3.right * Time.deltaTime * velocity);
+		sr.flipX = facing < 0;
 	}
 
 	public void onMovement(InputEvent evt)
