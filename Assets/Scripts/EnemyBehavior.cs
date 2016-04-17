@@ -2,14 +2,19 @@
 using System.Collections;
 using Spewnity;
 
+// Rename to PreyController, in fact rename all Enemy stuff to Prey
 public class EnemyBehavior : MonoBehaviour
 {
 	public static float WORRY_THRESHOLD = 2f;
 	public static float ALARM_THRESHOLD = 10f;
 	public static float MAX_ANXIETY = 14f;
+	public static float ANXIETY_GROWTH = 0.5f;
 	private float anxiety = 0f;
+	private float targetAnxiety = 0f;
 	private float stateTimer = 0f;
 	private float lastRange;
+	private Vector3 lastPlayerSighting;
+	private Vector3 lastNoiseHeard;
 	private EnemyView view;
 	private  AnxietyGroup anxietyGroup;
 	private System.Action stateFunc;
@@ -33,6 +38,8 @@ public class EnemyBehavior : MonoBehaviour
 
 	void Update()
 	{
+		if(anxiety != targetAnxiety) anxiety = Mathf.Lerp(anxiety, targetAnxiety, Time.deltaTime * ANXIETY_GROWTH);
+
 		lastAnxietyGroup = anxietyGroup;
 		anxietyGroup = getState();
 
@@ -52,7 +59,7 @@ public class EnemyBehavior : MonoBehaviour
 		else updateState();
 
 		// Reduce anxiety over time
-		anxiety = Mathf.Max(0, anxiety - anxietyDropRate * Time.deltaTime);
+		targetAnxiety = Mathf.Max(0, targetAnxiety - anxietyDropRate * Time.deltaTime);
 	}
 
 	public void setMovement(float speed)
@@ -65,7 +72,7 @@ public class EnemyBehavior : MonoBehaviour
 		stateIsInitializing = true;
 		stateFunc = func;
 		currentState = func.Method.Name;
-		Debug.Log(gameObject.name + " is entering " + func + " lastAnxietyFacing:" + lastRange);
+//		Debug.Log(gameObject.name + " is entering " + func + " lastAnxietyFacing:" + lastRange);
 		stateFunc();
 	}
 
@@ -86,35 +93,37 @@ public class EnemyBehavior : MonoBehaviour
 	{
 		setMovement(0f);
 
-		gameObject.GetComponent<SpriteRenderer>().color = Color.blue;
+		view.setTint(Color.blue);
 
 		GameObject.Destroy(gameObject.GetComponent<EnemyBehavior>());
 		GameObject.Destroy(gameObject.GetComponent<CanBeEaten>());
 		GameObject.Destroy(gameObject.GetComponent<CanHear>());
+		GameObject.Destroy(transform.Find("Vision").gameObject); // Enemy no longer has vision collider
 
 		NoiseManager.instance.addNoise("dying", gameObject);
 	}
 
+	public void spottedPlayer(GameObject playerGO, float range)
+	{
+//		Debug.Log("Spotted player!!!");
+		lastPlayerSighting = playerGO.transform.position;
+
+		addAnxiety(MAX_ANXIETY, range);
+	}
+
 	public void addAnxiety(float amount, float range)
 	{
-		// TODO If delay already running, add anxiet together and adjust facing
-		StartCoroutine(delayAddAnxiety(amount, range, Random.Range(0.1f, 0.8f)));
+		targetAnxiety = Mathf.Min(MAX_ANXIETY, targetAnxiety + amount);
+		lastRange = range;
 	}
 
-	IEnumerator delayAddAnxiety(float amount, float range, float delay)
-	{
-		yield return new WaitForSeconds(delay);
-		anxiety += amount;
-		lastRange = range;		
-	}
-
-	//====
+	//====================================================================================
 
 	public void walkingState()
 	{
 		if(stateIsInitializing)
 		{ 
-			gameObject.GetComponent<SpriteRenderer>().color = Color.white;
+			view.setTint(Color.white);
 			setMovement(-1f); // walking toward base
 			stateTimer = Random.Range(2f, 20f);
 			return;
@@ -146,8 +155,8 @@ public class EnemyBehavior : MonoBehaviour
 		if(stateIsInitializing)
 		{
 			NoiseManager.instance.addNoise("nervous", gameObject);
-			gameObject.GetComponent<SpriteRenderer>().color = Color.green;
-			view.stand(lastRange);
+			view.setTint(Color.green);
+			view.stand(1f); // face away
 			stateTimer = Random.Range(0.0f, 2.0f);
 		}
 
@@ -159,8 +168,8 @@ public class EnemyBehavior : MonoBehaviour
 	{
 		if(stateIsInitializing)
 		{			
-			gameObject.GetComponent<SpriteRenderer>().color = Color.green;
-			setMovement(-1f);
+			view.setTint(Color.green);
+			setMovement(-1f); // look towards
 			stateTimer = Random.Range(2.0f, 6.0f);
 		}
 
@@ -173,9 +182,9 @@ public class EnemyBehavior : MonoBehaviour
 		if(stateIsInitializing)
 		{
 			NoiseManager.instance.addNoise("searching", gameObject);
-			gameObject.GetComponent<SpriteRenderer>().color = Color.green;
-			view.stand(lastRange);
-			stateTimer = Random.Range(0f, 2f);
+			view.setTint(Color.green);
+			view.stand(-lastRange);
+			stateTimer = Random.Range(1f, 3f);
 			return;
 		}
 
@@ -187,7 +196,7 @@ public class EnemyBehavior : MonoBehaviour
 	{
 		if(stateIsInitializing)
 		{			
-			gameObject.GetComponent<SpriteRenderer>().color = Color.green;
+			view.setTint(Color.green);
 			setMovement(0.5f * Mathf.Sign(lastRange)); // walk slowly toward noise
 			stateTimer = Random.Range(2.0f, 6.0f);
 		}
@@ -202,18 +211,18 @@ public class EnemyBehavior : MonoBehaviour
 		if(stateIsInitializing)
 		{
 			NoiseManager.instance.addNoise("fleeing", gameObject);
-			gameObject.GetComponent<SpriteRenderer>().color = Color.red;
+			view.setTint(Color.red);
 			setMovement(-1.5f); // Run
 			return;
 		}
 	}
-		
+
 	public void fightingState()
 	{
 		if(stateIsInitializing)
 		{
-			NoiseManager.instance.addNoise("fighting", gameObject);
-			gameObject.GetComponent<SpriteRenderer>().color = Color.red;
+			if(anxietyGroup != lastAnxietyGroup) NoiseManager.instance.addNoise("fighting", gameObject);
+			view.setTint(Color.red);
 			setMovement(1.2f * Mathf.Sign(lastRange)); // walk quickly toward noise
 			stateTimer = lastRange / 1.2f;
 			return;

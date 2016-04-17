@@ -18,10 +18,15 @@ public class CanBeEaten : MonoBehaviour
 
 	void OnTriggerEnter2D(Collider2D other)
 	{ 		
-		if(other.GetComponent<CanEatEnemies>() == null || gameObject.GetComponent<CanBeEaten>() == null)
+		var canEatEnemies = other.GetComponent<CanEatEnemies>();
+		if(canEatEnemies == null)
 			return;
 
-		Debug.Log(gameObject.name + " has gone circle!");
+		// Can't eat while disguised
+		if(canEatEnemies.isDisguised())
+			return;
+
+//		Debug.Log(gameObject.name + " is death colliding with " + other.gameObject.name);
 		eb.die();
 	}
 }

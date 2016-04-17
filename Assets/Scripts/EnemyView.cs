@@ -7,11 +7,16 @@ public class EnemyView : MonoBehaviour
 	public static float MIN_VELOCITY = 0.3f;
 	public float velocity = 0f;
 	public float targetVelocity = 0f;
-	public SpriteRenderer sr;
+	private SpriteRenderer faceSR;
+	private BoxCollider2D visionCollider;
 
 	void Awake()
 	{
-		sr = gameObject.GetComponent<SpriteRenderer>();
+		faceSR = transform.Find("Face").GetComponent<SpriteRenderer>();
+		visionCollider = transform.Find("Vision").GetComponent<BoxCollider2D>();
+
+		Debug.Assert(faceSR != null);
+		Debug.Assert(visionCollider != null);
 	}
 
 	void Update()
@@ -25,14 +30,24 @@ public class EnemyView : MonoBehaviour
 			velocity = 0f;
 			return;
 		}
-		else
-		{
-			// Set facing
-			sr.flipX = (velocity < 0);
-		}
-			
+		else setFacing(velocity < 0); // only set facing when we're still moving
+
 		// Update position
 		transform.Translate(Vector3.right * Time.deltaTime * velocity);
+	}
+
+	private void setFacing(bool flipped) // flipped means left
+	{
+		// Set facing of face sprite
+		faceSR.flipX = flipped;
+
+		// Set position of vision cone
+		if(visionCollider)
+		{
+			Vector2 offset = visionCollider.offset;
+			offset.x = Mathf.Abs(offset.x) * (flipped ? -1 : 1);
+			visionCollider.offset = offset;
+		}
 	}
 
 	public void setMovement(float speed)
@@ -48,6 +63,11 @@ public class EnemyView : MonoBehaviour
 	public void stand(float facing) // -1 face left, 1 face right
 	{
 		stand();
-		sr.flipX = (facing < 0);
+		setFacing(facing < 0);
+	}
+
+	public void setTint(Color color)
+	{
+		faceSR.color = color;
 	}
 }
