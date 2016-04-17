@@ -11,6 +11,7 @@ public class Hunter : MonoBehaviour
 	public float spottedTimer;
 	public int health = START_HEALTH;
 	private HunterView view;
+	private bool wasDisguised;
 
 	public void Awake()
 	{
@@ -44,6 +45,13 @@ public class Hunter : MonoBehaviour
 
 	public void Update()
 	{
+		bool disguised = isDisguised();
+		if(wasDisguised != disguised)
+		{
+			wasDisguised = disguised;
+			view.setDisguise(disguised);
+		}
+
 		if(spottedTimer <= 0)
 			return;
 

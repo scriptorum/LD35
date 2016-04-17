@@ -7,9 +7,12 @@ public class HunterView : MonoBehaviour
 	public static float ACCELERATION = 8f;
 	public static float MIN_VELOCITY = 0.5f;
 	public static float MAX_VELOCITY = 5f;
+	public static string MAIN_COLOR = "#E0C732";
+	public static string DISGUISE_COLOR = "#84C2C4";
 	public bool moving = false;
 	public float facing = -1.0f;
 	public float velocity = 0;
+	public Sprite mouthSmile;
 	public Sprite mouthClosed;
 	public Sprite mouthTalk;
 	public Sprite mouthYell;
@@ -21,6 +24,8 @@ public class HunterView : MonoBehaviour
 	private SpriteRenderer eyesSR;
 	private SpriteRenderer mouthSR;
 	private ParticleSystem bloodspray;
+	private Color mainColor;
+	private Color disguiseColor;
 
 	void Awake()
 	{
@@ -28,6 +33,11 @@ public class HunterView : MonoBehaviour
 		eyesSR = transform.Find("Face/Eyes").GetComponent<SpriteRenderer>();
 		mouthSR = transform.Find("Face/Mouth").GetComponent<SpriteRenderer>();
 		bloodspray = transform.Find("Bloodspray").GetComponent<ParticleSystem>();
+
+		mainColor = getColor(MAIN_COLOR);
+		disguiseColor = getColor(DISGUISE_COLOR);
+
+		setColor(mainColor);
 	}
 
 	void Update()
@@ -35,6 +45,47 @@ public class HunterView : MonoBehaviour
 		// Update position
 		transform.Translate(Vector3.right * Time.deltaTime * velocity);
 		eyesSR.flipX = mouthSR.flipX = facing < 0;
+	}
+
+	public Color getColor(string htmlColor)
+	{
+		Color color = new Color();
+		if(ColorUtility.TryParseHtmlString(htmlColor, out color) == false) throw new UnityException("Bad color:" + htmlColor);
+		return color;
+	}
+
+	public void setColor(Color c)
+	{
+		bodySR.color = c;
+	}
+
+	public static float DISGUISE_TIME = 0.6f;
+
+	public IEnumerator lerpColor(Color startColor, Color endColor)
+	{
+		float t = 0;
+
+		do
+		{
+			t += Time.deltaTime;
+			bodySR.color = Color.Lerp(startColor, endColor, t / DISGUISE_TIME);
+			yield return null;
+		}
+		while (t < 1.0f);
+	}
+
+	public void setDisguise(bool disguised)
+	{
+		if(disguised)
+		{
+			StartCoroutine(lerpColor(mainColor, disguiseColor));
+			setMouth(MouthType.Smile);
+		}
+		else
+		{
+			StartCoroutine(lerpColor(disguiseColor, mainColor));
+			setMouth(MouthType.Closed);
+		}
 	}
 		
 	// Returns true if still moving
@@ -44,8 +95,7 @@ public class HunterView : MonoBehaviour
 
 		// Come to stop if going slow enough
 		moving = (Mathf.Abs(velocity) >= MIN_VELOCITY);
-		if(!moving)
-			velocity = 0f;
+		if(!moving) velocity = 0f;
 
 		return moving;
 	}
@@ -58,12 +108,10 @@ public class HunterView : MonoBehaviour
 		// Enforce maximum velocity
 		float absVelocity = Mathf.Abs(velocity);
 		float signVelocity = Mathf.Sign(velocity);
-		if(absVelocity > MAX_VELOCITY)
-			velocity = signVelocity * MAX_VELOCITY;
+		if(absVelocity > MAX_VELOCITY) velocity = signVelocity * MAX_VELOCITY;
 
 		// Change facing if moving fast enough, otherwise assume old facing
-		if(absVelocity > MIN_VELOCITY)
-			facing = signVelocity;
+		if(absVelocity > MIN_VELOCITY) facing = signVelocity;
 
 		return true;
 	}
@@ -78,13 +126,18 @@ public class HunterView : MonoBehaviour
 
 	public void restoreFace()
 	{
-		if(dead)
-			return;
+		if(dead) return;
 		setMouth(MouthType.Closed);
 		setEyes(EyeType.Open);
 	}
 
+	public void setTint(Color color)
+	{
+		bodySR.color = color;
+	}
+
 	public bool dead = false;
+
 	public void die()
 	{
 		// TODO Replace with death animation, culminating in dead circle
@@ -113,11 +166,16 @@ public class HunterView : MonoBehaviour
 			case MouthType.Yell:
 				sprite = mouthYell;
 				break;
-			default: throw new UnityException("WTF");
+			case MouthType.Smile:
+				sprite = mouthSmile;
+				break;
+			default:
+				throw new UnityException("WTF");
 		}
 
 		mouthSR.sprite = sprite;
 	}
+
 	public void setEyes(EyeType type)
 	{
 		Sprite sprite = null;
@@ -135,7 +193,8 @@ public class HunterView : MonoBehaviour
 			case EyeType.Squint:
 				sprite = eyesSquint;
 				break;
-			default: throw new UnityException("WTF");
+			default:
+				throw new UnityException("WTF");
 		}
 
 		eyesSR.sprite = sprite;

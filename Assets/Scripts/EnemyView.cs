@@ -149,7 +149,8 @@ public enum MouthType
 {
 	Closed,
 	Talk,
-	Yell
+	Yell,
+	Smile
 }
 		
 public enum EyeType
