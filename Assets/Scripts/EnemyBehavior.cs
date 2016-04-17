@@ -102,6 +102,8 @@ public class EnemyBehavior : MonoBehaviour
 		setMovement(0f);
 
 		view.setTint(Color.blue);
+		view.setMouth(MouthType.Yell);
+		view.setEyes(EyeType.Closed);
 
 		GameObject.Destroy(gameObject.GetComponent<EnemyBehavior>());
 		GameObject.Destroy(gameObject.GetComponent<CanBeEaten>());
@@ -150,6 +152,8 @@ public class EnemyBehavior : MonoBehaviour
 		if(stateIsInitializing)
 		{ 
 			view.setTint(Color.white);
+			view.setMouth(MouthType.Closed);
+			view.setEyes(EyeType.Calm);
 			setMovement(endDirection); // walking toward base
 			stateTimer = Random.Range(2f, 20f);
 			return;
@@ -163,6 +167,7 @@ public class EnemyBehavior : MonoBehaviour
 	{
 		if(stateIsInitializing)
 		{
+			view.setEyes(EyeType.Closed);
 			view.stand();
 			stateTimer = Random.Range(2f, 10f);
 			return;
@@ -180,6 +185,8 @@ public class EnemyBehavior : MonoBehaviour
 	{
 		if(stateIsInitializing)
 		{
+			view.setMouth(MouthType.Talk);
+			view.setEyes(EyeType.Open);
 			NoiseManager.instance.addNoise("nervous", gameObject);
 			view.setTint(Color.green);
 			view.stand(startDirection); // face away
@@ -194,6 +201,7 @@ public class EnemyBehavior : MonoBehaviour
 	{
 		if(stateIsInitializing)
 		{			
+			view.setMouth(MouthType.Closed);
 			view.setTint(Color.green);
 			setMovement(endDirection); // look towards
 			stateTimer = Random.Range(2.0f, 6.0f);
@@ -207,6 +215,8 @@ public class EnemyBehavior : MonoBehaviour
 	{
 		if(stateIsInitializing)
 		{
+			view.setEyes(EyeType.Squint);
+			view.setMouth(MouthType.Talk);
 			NoiseManager.instance.addNoise("searching", gameObject);
 			view.setTint(Color.green);
 			view.stand(-getTargetRange());
@@ -222,6 +232,7 @@ public class EnemyBehavior : MonoBehaviour
 	{
 		if(stateIsInitializing)
 		{			
+			view.setMouth(MouthType.Closed);
 			view.setTint(Color.green);
 			setMovement(0.5f * Mathf.Sign(getTargetRange())); // walk slowly toward noise
 			stateTimer = Random.Range(2.0f, 6.0f);
@@ -236,6 +247,8 @@ public class EnemyBehavior : MonoBehaviour
 	{
 		if(stateIsInitializing)
 		{
+			view.setMouth(MouthType.Yell);
+			view.setEyes(EyeType.Open);
 			NoiseManager.instance.addNoise("fleeing", gameObject);
 			view.setTint(Color.red);
 			setMovement(-1.5f); // Run
@@ -249,7 +262,9 @@ public class EnemyBehavior : MonoBehaviour
 	{
 		if(stateIsInitializing)
 		{
-			if(anxietyGroup != lastAnxietyGroup) NoiseManager.instance.addNoise("fighting", gameObject);
+			view.setMouth(MouthType.Yell);
+			if(anxietyGroup != lastAnxietyGroup) 
+				NoiseManager.instance.addNoise("fighting", gameObject);
 			view.setTint(Color.red);
 			float range = getTargetRange();
 
