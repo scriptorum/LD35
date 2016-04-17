@@ -12,23 +12,19 @@ public class HunterView : MonoBehaviour
 	public bool moving = false;
 	public float facing = -1.0f;
 	public float velocity = 0;
-	public Sprite mouthSmile;
-	public Sprite mouthClosed;
-	public Sprite mouthTalk;
-	public Sprite mouthYell;
 	private SpriteRenderer bodySR;
-	private SpriteRenderer mouthSR;
 	private ParticleSystem bloodspray;
 	private Color mainColor;
 	private Color disguiseColor;
 	private Eyes eyes;
+	private Mouth mouth;
 
 	void Awake()
 	{
 		bodySR = transform.Find("Body").GetComponent<SpriteRenderer>();
-		mouthSR = transform.Find("Face/Mouth").GetComponent<SpriteRenderer>();
 		bloodspray = transform.Find("Bloodspray").GetComponent<ParticleSystem>();
 		eyes = transform.Find("Face/Eyes").GetComponent<Eyes>();
+		mouth = transform.Find("Face/Mouth").GetComponent<Mouth>();
 
 		mainColor = getColor(MAIN_COLOR);
 		disguiseColor = getColor(DISGUISE_COLOR);
@@ -42,7 +38,7 @@ public class HunterView : MonoBehaviour
 		transform.Translate(Vector3.right * Time.deltaTime * velocity);
 		bool flipped = facing < 0;
 		eyes.setFlipped(flipped);
-		mouthSR.flipX = facing < 0;
+		mouth.setFlipped(flipped);
 	}
 
 	public Color getColor(string htmlColor)
@@ -77,12 +73,12 @@ public class HunterView : MonoBehaviour
 		if(disguised)
 		{
 			StartCoroutine(lerpColor(mainColor, disguiseColor));
-			setMouth(MouthType.Smile);
+			mouth.setMouth(MouthType.Smile);
 		}
 		else
 		{
 			StartCoroutine(lerpColor(disguiseColor, mainColor));
-			setMouth(MouthType.Closed);
+			mouth.setMouth(MouthType.Closed);
 		}
 	}
 		
@@ -117,7 +113,7 @@ public class HunterView : MonoBehaviour
 	public void hurt()
 	{
 		bloodspray.Emit(10);
-		setMouth(MouthType.Talk);
+		mouth.setMouth(MouthType.Talk);
 		eyes.setEyes(EyeType.Squint);
 		Invoke("restoreFace", 0.25f);
 	}
@@ -125,7 +121,7 @@ public class HunterView : MonoBehaviour
 	public void restoreFace()
 	{
 		if(dead) return;
-		setMouth(MouthType.Closed);
+		mouth.setMouth(MouthType.Closed);
 		eyes.setEyes(EyeType.Open);
 	}
 
@@ -143,34 +139,10 @@ public class HunterView : MonoBehaviour
 		dead = true;
 		Debug.Log("TODO: You died");
 		bloodspray.Emit(100);
-		setMouth(MouthType.Yell);
+		mouth.setMouth(MouthType.Yell);
 		eyes.setEyes(EyeType.Closed);
 
 		GameObject.Destroy(gameObject.GetComponent<PlayerController>());
 		GameObject.Destroy(gameObject.GetComponent<Hunter>());
-	}
-
-	public void setMouth(MouthType type)
-	{
-		Sprite sprite = null;
-		switch(type)
-		{
-			case MouthType.Closed:
-				sprite = mouthClosed;
-				break;
-			case MouthType.Talk:
-				sprite = mouthTalk;
-				break;
-			case MouthType.Yell:
-				sprite = mouthYell;
-				break;
-			case MouthType.Smile:
-				sprite = mouthSmile;
-				break;
-			default:
-				throw new UnityException("WTF");
-		}
-
-		mouthSR.sprite = sprite;
-	}
+	}		
 }

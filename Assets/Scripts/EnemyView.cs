@@ -10,28 +10,20 @@ public class EnemyView : MonoBehaviour
 	public float targetVelocity = 0f;
 	public bool flipped;
 	public GameObject bulletPrefab;
-	public Sprite mouthClosed;
-	public Sprite mouthTalk;
-	public Sprite mouthYell;
-	public Sprite eyesClosed;
-	public Sprite eyesCalm;
-	public Sprite eyesSquint;
-	public Sprite eyesOpen;
 	private SpriteRenderer bodySR;
-	private SpriteRenderer eyesSR;
-	private SpriteRenderer mouthSR;
 	private BoxCollider2D visionCollider;
 	private Eyes eyes;
+	private Mouth mouth;
 
 	void Awake()
 	{
 		bodySR = transform.Find("Body").GetComponent<SpriteRenderer>();
 		eyes = transform.Find("Face/Eyes").GetComponent<Eyes>();
-		mouthSR = transform.Find("Face/Mouth").GetComponent<SpriteRenderer>();
+		mouth = transform.Find("Face/Mouth").GetComponent<Mouth>();
 		visionCollider = transform.Find("Vision").GetComponent<BoxCollider2D>();
 
 		bodySR.sortingOrder = sortingOrder++;
-		mouthSR.sortingOrder = sortingOrder++;
+		mouth.setSortingOrder(sortingOrder++);
 		eyes.setSortingOrder(sortingOrder++);
 
 		Debug.Assert(bodySR != null);
@@ -59,7 +51,7 @@ public class EnemyView : MonoBehaviour
 	{
 		// Set facing of face sprite
 		eyes.setFlipped(flipped);
-		mouthSR.flipX = flipped;
+		mouth.setFlipped(flipped);
 		this.flipped = flipped;
 
 		// Set position of vision cone
@@ -104,37 +96,14 @@ public class EnemyView : MonoBehaviour
 		bullet.fire(flipped);
 	}
 
-	public void setMouth(MouthType type)
-	{
-		Sprite sprite = null;
-		switch(type)
-		{
-			case MouthType.Closed:
-				sprite = mouthClosed;
-				break;
-			case MouthType.Talk:
-				sprite = mouthTalk;
-				break;
-			case MouthType.Yell:
-				sprite = mouthYell;
-				break;
-			default: throw new UnityException("WTF");
-		}
-
-		mouthSR.sprite = sprite;
-	}
-
 	public void setEyes(EyeType type)
 	{
 		eyes.setEyes(type);
 	}
-}
 
-public enum MouthType
-{
-	Closed,
-	Talk,
-	Yell,
-	Smile
+	public void setMouth(MouthType type)
+	{
+		mouth.setMouth(type);
+	}
 }
 		
