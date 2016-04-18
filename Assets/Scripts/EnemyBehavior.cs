@@ -21,7 +21,7 @@ public class EnemyBehavior : MonoBehaviour
 	private Vector3 lastNoiseHeard;
 	private EnemyView view;
 	private  AnxietyGroup anxietyGroup;
-	private System.Action stateFunc;
+	private System.Action stateFunc = null;
 	public string currentState;
 	private AnxietyGroup lastAnxietyGroup;
 	private bool stateIsInitializing = true;
@@ -29,14 +29,9 @@ public class EnemyBehavior : MonoBehaviour
 	public float anxietyDropRate = 2f;
 	public float speedModifier = 1f;
 
-	void Awake()
-	{
-		view = gameObject.GetComponent<EnemyView>();
-	}
-
 	void Start()
 	{
-		switchState(walkingState);
+		view = gameObject.GetComponent<EnemyView>();
 	}
 
 	void Update()
@@ -50,8 +45,12 @@ public class EnemyBehavior : MonoBehaviour
 		lastAnxietyGroup = anxietyGroup;
 		anxietyGroup = getState();
 
+		// Script has fully initialized
+		if(stateFunc == null)
+			switchState(walkingState);
+
 		// See if anxiety has raised or lowered status
-		if(anxietyGroup != lastAnxietyGroup)
+		else if(anxietyGroup != lastAnxietyGroup)
 		{
 			if(anxietyGroup == AnxietyGroup.Calm) switchState(walkingState);
 

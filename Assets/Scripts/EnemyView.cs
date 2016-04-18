@@ -3,6 +3,7 @@ using System.Collections;
 
 public class EnemyView : MonoBehaviour
 {
+	public static string SORTING_LAYER = "Enemies";
 	public static float ACCELERATION = 12f;
 	public static float MIN_VELOCITY = 0.3f;
 	public static int sortingOrder;
@@ -14,20 +15,29 @@ public class EnemyView : MonoBehaviour
 	private BoxCollider2D visionCollider;
 	private Eyes eyes;
 	private Mouth mouth;
+	private Garment garment;
+	private GarmentType delayedGarment = GarmentType.None;
 
-	void Awake()
+	void Start()
 	{
 		bodySR = transform.Find("Body").GetComponent<SpriteRenderer>();
 		eyes = transform.Find("Face/Eyes").GetComponent<Eyes>();
 		mouth = transform.Find("Face/Mouth").GetComponent<Mouth>();
+		garment = transform.Find("Garment").GetComponent<Garment>();
 		visionCollider = transform.Find("Vision").GetComponent<BoxCollider2D>();
-
-		bodySR.sortingOrder = sortingOrder++;
-		mouth.setSortingOrder(sortingOrder++);
-		eyes.setSortingOrder(sortingOrder++);
 
 		Debug.Assert(bodySR != null);
 		Debug.Assert(visionCollider != null);
+		Debug.Assert(mouth != null);
+		Debug.Assert(eyes != null);
+		Debug.Assert(garment != null);
+
+		bodySR.sortingOrder = sortingOrder++;
+		mouth.setLayer(SORTING_LAYER, sortingOrder++);
+		eyes.setLayer(SORTING_LAYER, sortingOrder++);
+		garment.setLayer(SORTING_LAYER, sortingOrder++);
+		if(delayedGarment != GarmentType.None)
+			garment.setGarment(delayedGarment);
 	}
 
 	void Update()
@@ -52,6 +62,7 @@ public class EnemyView : MonoBehaviour
 		// Set facing of face sprite
 		eyes.setFlipped(flipped);
 		mouth.setFlipped(flipped);
+		garment.setFlipped(flipped);
 		this.flipped = flipped;
 
 		// Set position of vision cone
@@ -104,6 +115,13 @@ public class EnemyView : MonoBehaviour
 	public void setMouth(MouthType type)
 	{
 		mouth.setMouth(type);
+	}
+
+	public void setGarment(GarmentType type)
+	{
+		if(garment == null)
+			delayedGarment = type;
+		else garment.setGarment(type);
 	}
 }
 		

@@ -3,12 +3,14 @@ using System.Collections;
 
 public class HunterView : MonoBehaviour
 {
+	public static string SORTING_LAYER = "Player";
 	private static float SLOW_FACTOR = 2f;
 	public static float ACCELERATION = 8f;
 	public static float MIN_VELOCITY = 0.5f;
 	public static float MAX_VELOCITY = 5f;
 	public static string MAIN_COLOR = "#E0C732";
 	public static string DISGUISE_COLOR = "#84C2C4";
+	public static int sortingOrder;
 	public bool moving = false;
 	public float facing = -1.0f;
 	public float velocity = 0;
@@ -18,13 +20,20 @@ public class HunterView : MonoBehaviour
 	private Color disguiseColor;
 	private Eyes eyes;
 	private Mouth mouth;
+	private Garment garment;
 
-	void Awake()
+	void Start()
 	{
 		bodySR = transform.Find("Body").GetComponent<SpriteRenderer>();
 		bloodspray = transform.Find("Bloodspray").GetComponent<ParticleSystem>();
 		eyes = transform.Find("Face/Eyes").GetComponent<Eyes>();
 		mouth = transform.Find("Face/Mouth").GetComponent<Mouth>();
+		garment = transform.Find("Garment").GetComponent<Garment>();
+
+		bodySR.sortingOrder = sortingOrder++;
+		mouth.setLayer(SORTING_LAYER, sortingOrder++);
+		eyes.setLayer(SORTING_LAYER, sortingOrder++);
+		garment.setLayer(SORTING_LAYER, sortingOrder++);
 
 		mainColor = getColor(MAIN_COLOR);
 		disguiseColor = getColor(DISGUISE_COLOR);

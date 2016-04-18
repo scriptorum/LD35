@@ -3,10 +3,10 @@ using System.Collections;
 
 public class Eyes : MonoBehaviour
 {
-	public Sprite eyesClosed;
-	public Sprite eyesCalm;
-	public Sprite eyesSquint;
-	public Sprite eyesOpen;
+	public Sprite closed;
+	public Sprite calm;
+	public Sprite squint;
+	public Sprite open;
 	private SpriteRenderer sr;
 
 	void Awake()
@@ -19,22 +19,26 @@ public class Eyes : MonoBehaviour
 		Sprite sprite = null;
 		switch(type)
 		{
+			case EyeType.None:
+				sprite = null;
+				break;
 			case EyeType.Calm:
-				sprite = eyesCalm;
+				sprite = calm;
 				break;
 			case EyeType.Closed:
-				sprite = eyesClosed;
+				sprite = closed;
 				break;
 			case EyeType.Open:
-				sprite = eyesOpen;
+				sprite = open;
 				break;
 			case EyeType.Squint:
-				sprite = eyesSquint;
+				sprite = squint;
 				break;
 			default:
 				throw new UnityException("WTF");
 		}
 
+		Debug.Assert(sprite != null);
 		sr.sprite = sprite;
 	}
 
@@ -43,14 +47,16 @@ public class Eyes : MonoBehaviour
 		sr.flipX = flipped;
 	}
 
-	public void setSortingOrder(int order)
+	public void setLayer(string sortingLayer, int sortingOrder)
 	{
-		sr.sortingOrder = order;
+		sr.sortingLayerName = sortingLayer;
+		sr.sortingOrder = sortingOrder;
 	}
 }
 
 public enum EyeType
 {
+	None,
 	Closed,
 	Calm,
 	Squint,
