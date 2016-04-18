@@ -16,22 +16,28 @@ public class EnemyView : MonoBehaviour
 	private Eyes eyes;
 	private Mouth mouth;
 	private Garment garment;
+	private Animator gunMount;
 	private GarmentType delayedGarment = GarmentType.None;
 
-	void Start()
+	void Awake()
 	{
 		bodySR = transform.Find("Body").GetComponent<SpriteRenderer>();
 		eyes = transform.Find("Face/Eyes").GetComponent<Eyes>();
 		mouth = transform.Find("Face/Mouth").GetComponent<Mouth>();
 		garment = transform.Find("Garment").GetComponent<Garment>();
 		visionCollider = transform.Find("Vision").GetComponent<BoxCollider2D>();
+		gunMount = transform.Find("GunMount").GetComponent<Animator>();
 
 		Debug.Assert(bodySR != null);
 		Debug.Assert(visionCollider != null);
 		Debug.Assert(mouth != null);
 		Debug.Assert(eyes != null);
 		Debug.Assert(garment != null);
+		Debug.Assert(garment != null);
+	}
 
+	void Start()
+	{
 		bodySR.sortingOrder = sortingOrder++;
 		mouth.setLayer(SORTING_LAYER, sortingOrder++);
 		eyes.setLayer(SORTING_LAYER, sortingOrder++);

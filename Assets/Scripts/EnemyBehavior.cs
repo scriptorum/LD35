@@ -29,7 +29,7 @@ public class EnemyBehavior : MonoBehaviour
 	public float anxietyDropRate = 2f;
 	public float speedModifier = 1f;
 
-	void Start()
+	void Awake()
 	{
 		view = gameObject.GetComponent<EnemyView>();
 	}
