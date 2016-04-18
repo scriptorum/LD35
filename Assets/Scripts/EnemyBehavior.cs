@@ -25,9 +25,9 @@ public class EnemyBehavior : MonoBehaviour
 	public string currentState;
 	private AnxietyGroup lastAnxietyGroup;
 	private bool stateIsInitializing = true;
-	public bool armed = false;
 	public float anxietyDropRate = 2f;
 	public float speedModifier = 1f;
+	public bool armed = false;
 
 	void Awake()
 	{
@@ -59,6 +59,9 @@ public class EnemyBehavior : MonoBehaviour
 
 			if(anxietyGroup == AnxietyGroup.Alarmed) if(armed) switchState(fightingState);
 			else switchState(fleeingState);
+
+//			if(anxietyGroup < lastAnxietyGroup && view.wieldingGun)
+//				view.holsterGun();
 		}
 		
 		// Update state
@@ -261,6 +264,7 @@ public class EnemyBehavior : MonoBehaviour
 	{
 		if(stateIsInitializing)
 		{
+//			view.drawGun();
 			view.setMouth(MouthType.Yell);
 			if(anxietyGroup != lastAnxietyGroup) 
 				NoiseManager.instance.addNoise("fighting", gameObject);
@@ -274,10 +278,7 @@ public class EnemyBehavior : MonoBehaviour
 
 			// Fire gun?
 			if(range < MAX_FIRING_RANGE && lastPlayerSighting != null)
-			{
-				NoiseManager.instance.addNoise("gunshot", gameObject);
 				view.fireGun();
-			}
 
 			stateTimer = Random.Range(.35f, 1f);
 			return;

@@ -17,7 +17,9 @@ public class EnemyView : MonoBehaviour
 	private Mouth mouth;
 	private Garment garment;
 	private Animator gunMount;
+	private Gun gun;
 	private GarmentType delayedGarment = GarmentType.None;
+	public bool armed = false;
 
 	void Awake()
 	{
@@ -27,6 +29,7 @@ public class EnemyView : MonoBehaviour
 		garment = transform.Find("Garment").GetComponent<Garment>();
 		visionCollider = transform.Find("Vision").GetComponent<BoxCollider2D>();
 		gunMount = transform.Find("GunMount").GetComponent<Animator>();
+		gun = transform.Find("GunMount/Gun").GetComponent<Gun>();
 
 		Debug.Assert(bodySR != null);
 		Debug.Assert(visionCollider != null);
@@ -42,8 +45,9 @@ public class EnemyView : MonoBehaviour
 		mouth.setLayer(SORTING_LAYER, sortingOrder++);
 		eyes.setLayer(SORTING_LAYER, sortingOrder++);
 		garment.setLayer(SORTING_LAYER, sortingOrder++);
-		if(delayedGarment != GarmentType.None)
-			garment.setGarment(delayedGarment);
+		gun.setLayer(SORTING_LAYER, sortingOrder++);
+		updateGunMount();
+		if(delayedGarment != GarmentType.None) garment.setGarment(delayedGarment);
 	}
 
 	void Update()
@@ -63,6 +67,13 @@ public class EnemyView : MonoBehaviour
 		transform.Translate(Vector3.right * Time.deltaTime * velocity);
 	}
 
+	public void updateGunMount()
+	{		
+		bool active = this.armed && this.flipped;
+		gunMount.enabled = active;
+		gun.gameObject.SetActive(active);
+	}
+
 	private void setFacing(bool flipped) // flipped means left
 	{
 		// Set facing of face sprite
@@ -70,6 +81,7 @@ public class EnemyView : MonoBehaviour
 		mouth.setFlipped(flipped);
 		garment.setFlipped(flipped);
 		this.flipped = flipped;
+		updateGunMount();
 
 		// Set position of vision cone
 		if(visionCollider)
@@ -101,17 +113,36 @@ public class EnemyView : MonoBehaviour
 		bodySR.color = color;
 	}
 
+//	public bool wieldingGun = false;
+//	public void drawGun()
+//	{
+//		gunMount.SetTrigger("draw");
+//		wieldingGun = true;
+//	}
+
 	public void fireGun()
 	{
-		// TODO Raise Gun
+//		gunMount.SetTrigger("fire");
+		NoiseManager.instance.addNoise("gunshot", gameObject);
 
 		// Shoot bullet
 		GameObject go = (GameObject) Instantiate(bulletPrefab, transform.position, Quaternion.identity);
-
-		// Firebullet
 		Bullet bullet = go.GetComponent <Bullet>();
 		bullet.fire(flipped);
 	}
+
+//	public void holsterGun()
+//	{
+//		wieldingGun = false;
+//		gunMount.SetTrigger("holster");
+//	}
+
+//	public void gunMountEvent(AnimationEvent evt)
+//	{
+//		switch(evt.stringParameter)
+//		{
+//		}
+//	}
 
 	public void setEyes(EyeType type)
 	{
@@ -125,8 +156,7 @@ public class EnemyView : MonoBehaviour
 
 	public void setGarment(GarmentType type)
 	{
-		if(garment == null)
-			delayedGarment = type;
+		if(garment == null) delayedGarment = type;
 		else garment.setGarment(type);
 	}
 }
