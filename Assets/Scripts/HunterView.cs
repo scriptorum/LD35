@@ -14,6 +14,8 @@ public class HunterView : MonoBehaviour
 	public bool moving = false;
 	public float facing = -1.0f;
 	public float velocity = 0;
+	public float cameraPosition = 0.33f;
+	public Cameraman cameraman;
 	private SpriteRenderer bodySR;
 	private ParticleSystem bloodspray;
 	private Color mainColor;
@@ -22,14 +24,18 @@ public class HunterView : MonoBehaviour
 	private Mouth mouth;
 	private Garment garment;
 
-	void Start()
+	void Awake()
 	{
 		bodySR = transform.Find("Body").GetComponent<SpriteRenderer>();
 		bloodspray = transform.Find("Bloodspray").GetComponent<ParticleSystem>();
 		eyes = transform.Find("Face/Eyes").GetComponent<Eyes>();
 		mouth = transform.Find("Face/Mouth").GetComponent<Mouth>();
 		garment = transform.Find("Garment").GetComponent<Garment>();
+		cameraman = Camera.main.GetComponent<Cameraman>();
+	}
 
+	void Start()
+	{
 		bodySR.sortingOrder = sortingOrder++;
 		mouth.setLayer(SORTING_LAYER, sortingOrder++);
 		eyes.setLayer(SORTING_LAYER, sortingOrder++);
@@ -48,6 +54,7 @@ public class HunterView : MonoBehaviour
 		bool flipped = facing < 0;
 		eyes.setFlipped(flipped);
 		mouth.setFlipped(flipped);
+		cameraman.mainOffset = cameraPosition * (flipped ? -1 : 1);
 	}
 
 	public Color getColor(string htmlColor)

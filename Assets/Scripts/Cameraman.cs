@@ -3,37 +3,52 @@ using System.Collections;
 
 public class Cameraman : MonoBehaviour
 {
-	public float CAMERA_SPEED = 5.0f;
-	public float playerOffset = 0;
-	public HunterView player;
+	public float cameraSpeed = 5.0f;
+	public CameramanTarget goal = CameramanTarget.Main;
+	public Transform mainTarget;
 	public Transform altTarget = null;
+	[Tooltip("Offset makes camera shift to the left or right of the target. Optimal values are between -0.4f and 0.4f.")]
+	public float mainOffset = -0.25f; 
+	public float altOffset = 0.0f; 
+	private float width;
 
 	void Start()
 	{
-		player = GameObject.Find("Player").GetComponent<HunterView>();
-		Debug.Assert(player != null);
-
 		Camera cam = Camera.main;
 		float height = 2f * cam.orthographicSize;
-		float width = height * cam.aspect;
-		playerOffset = width / 4;
+		width = height * cam.aspect;
+//		mainTargetOffset = width / 4;
+	}
+
+	public void setGoal(CameramanTarget goal, Transform altTarget = null)
+	{
+		this.goal = goal;
+		if(altTarget != null) this.altTarget = altTarget;
 	}
 
 	void LateUpdate()
-	{
-		if(altTarget == null)
+	{		
+		if(goal == CameramanTarget.None)
+			return;
+
+		Transform target = (goal == CameramanTarget.Main ? mainTarget : altTarget);
+		float offset = (goal == CameramanTarget.Main ? mainOffset : altOffset);
+
+		if(target == null)
 		{
-			if(player == null)
-				return;
-			Vector3 pos = transform.position;
-			pos.x = player.transform.position.x + playerOffset * Mathf.Sign(player.facing);
-			transform.position = Vector3.Lerp(transform.position, pos, CAMERA_SPEED * Time.deltaTime);
+			Debug.Log(goal + " camera target is missing");
+			return;
 		}
-		else
-		{
-			Vector3 pos = transform.position;
-			pos.x = altTarget.position.x;
-			transform.position = Vector3.Lerp(transform.position, pos, CAMERA_SPEED * Time.deltaTime);
-		}
+
+		Vector3 pos = transform.position;
+		pos.x = target.transform.position.x + (width * offset);
+		transform.position = Vector3.Lerp(transform.position, pos, cameraSpeed * Time.deltaTime);
 	}
+}
+
+public enum CameramanTarget
+{
+	None,
+	Main,
+	Alt
 }
