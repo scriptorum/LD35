@@ -10,6 +10,7 @@ public class EnemyBehavior : MonoBehaviour
 	public static float MAX_ANXIETY = 14f;
 	public static float ANXIETY_GROWTH = 0.5f;
 	public static float TIME_UNTIL_FORGET_TARGET = 5f;
+	public static EnemyRunMode runMode = EnemyRunMode.Paused;
 	private float anxiety = 0f;
 	private float targetAnxiety = 0f;
 	private float stateTimer = 0f;
@@ -36,36 +37,47 @@ public class EnemyBehavior : MonoBehaviour
 
 	void Update()
 	{
+		switch(runMode)
+		{
+			case EnemyRunMode.Paused:
+				return;
+
+			case EnemyRunMode.RunScript:
+				scriptState();
+				return;
+			
+			case EnemyRunMode.StopScript:
+				// If stateFunc's null, this is second StopScript, we can turn it off now for the others
+				if(stateFunc != null) runMode = EnemyRunMode.Running;
+				setState(walkingState);
+				break;
+		}
+
 		targetTimer -= Time.deltaTime;
-		if(targetTimer <= 0)
-			lastPlayerSighting = null;
+		if(targetTimer <= 0) lastPlayerSighting = null;
 		
 		if(anxiety != targetAnxiety) anxiety = Mathf.Lerp(anxiety, targetAnxiety, Time.deltaTime * ANXIETY_GROWTH);
 
 		lastAnxietyGroup = anxietyGroup;
 		anxietyGroup = getState();
 
-		// Script has fully initialized
-		if(stateFunc == null)
-			switchState(walkingState);
-
 		// See if anxiety has raised or lowered status
-		else if(anxietyGroup != lastAnxietyGroup)
+		if(anxietyGroup != lastAnxietyGroup)
 		{
-			if(anxietyGroup == AnxietyGroup.Calm) switchState(walkingState);
+			if(anxietyGroup == AnxietyGroup.Calm) setState(walkingState);
 
-			if(anxietyGroup == AnxietyGroup.Worried) if(armed) switchState(searchingState);
-			else switchState(nervousState);
+			if(anxietyGroup == AnxietyGroup.Worried) if(armed) setState(searchingState);
+			else setState(nervousState);
 
-			if(anxietyGroup == AnxietyGroup.Alarmed) if(armed) switchState(fightingState);
-			else switchState(fleeingState);
+			if(anxietyGroup == AnxietyGroup.Alarmed) if(armed) setState(fightingState);
+			else setState(fleeingState);
 
 //			if(anxietyGroup < lastAnxietyGroup && view.wieldingGun)
 //				view.holsterGun();
 		}
 		
 		// Update state
-		else updateState();
+		updateState();
 
 		// Reduce anxiety over time
 		targetAnxiety = Mathf.Max(0, targetAnxiety - anxietyDropRate * Time.deltaTime);
@@ -77,7 +89,7 @@ public class EnemyBehavior : MonoBehaviour
 		view.setMovement(speed * speedModifier);
 	}
 
-	public void switchState(System.Action func)
+	public void setState(System.Action func)
 	{
 		stateIsInitializing = true;
 		stateFunc = func;
@@ -89,7 +101,7 @@ public class EnemyBehavior : MonoBehaviour
 	public void updateState()
 	{
 		stateIsInitializing = false;
-		stateFunc();
+		if(stateFunc != null) stateFunc();
 	}
 
 	public AnxietyGroup getState()
@@ -119,7 +131,7 @@ public class EnemyBehavior : MonoBehaviour
 	{
 //		Debug.Log("Spotted player!!!");
 		lastPlayerSighting = playerGO.transform.position;
-		targetTimer  = TIME_UNTIL_FORGET_TARGET;
+		targetTimer = TIME_UNTIL_FORGET_TARGET;
 		addAnxiety(MAX_ANXIETY, range);
 	}
 
@@ -146,8 +158,12 @@ public class EnemyBehavior : MonoBehaviour
 
 		return lastRange;
 	}
-
+		
 	//====================================================================================
+
+	public void scriptState()
+	{
+	}
 
 	public void walkingState()
 	{
@@ -162,7 +178,7 @@ public class EnemyBehavior : MonoBehaviour
 		}
 
 		stateTimer -= Time.deltaTime;
-		if(stateTimer <= 0) switchState(smokingState);
+		if(stateTimer <= 0) setState(smokingState);
 	}
 
 	public void smokingState()
@@ -176,7 +192,7 @@ public class EnemyBehavior : MonoBehaviour
 		}
 
 		stateTimer -= Time.deltaTime;
-		if(stateTimer <= 0) switchState(walkingState);
+		if(stateTimer <= 0) setState(walkingState);
 	}
 
 	public void chattingState()
@@ -196,7 +212,7 @@ public class EnemyBehavior : MonoBehaviour
 		}
 
 		stateTimer -= Time.deltaTime;
-		if(stateTimer <= 0) switchState(nervousWalkState);
+		if(stateTimer <= 0) setState(nervousWalkState);
 	}
 
 	public void nervousWalkState()
@@ -210,7 +226,7 @@ public class EnemyBehavior : MonoBehaviour
 		}
 
 		stateTimer -= Time.deltaTime;
-		if(stateTimer <= 0) switchState(nervousState);
+		if(stateTimer <= 0) setState(nervousState);
 	}
 
 	public void searchingState()
@@ -227,7 +243,7 @@ public class EnemyBehavior : MonoBehaviour
 		}
 
 		stateTimer -= Time.deltaTime;
-		if(stateTimer <= 0) switchState(searchingWalkState);
+		if(stateTimer <= 0) setState(searchingWalkState);
 	}
 
 	public void searchingWalkState()
@@ -241,7 +257,7 @@ public class EnemyBehavior : MonoBehaviour
 		}
 
 		stateTimer -= Time.deltaTime;
-		if(stateTimer <= 0) switchState(searchingState);
+		if(stateTimer <= 0) setState(searchingState);
 	}
 
 
@@ -260,32 +276,30 @@ public class EnemyBehavior : MonoBehaviour
 
 	public static float MIN_FIRING_RANGE = 3f;
 	public static float MAX_FIRING_RANGE = 8f;
+
 	public void fightingState()
 	{
 		if(stateIsInitializing)
 		{
 //			view.drawGun();
 			view.setMouth(MouthType.Yell);
-			if(anxietyGroup != lastAnxietyGroup) 
-				NoiseManager.instance.addNoise("fighting", gameObject);
+			if(anxietyGroup != lastAnxietyGroup) NoiseManager.instance.addNoise("fighting", gameObject);
 			view.setTint(Color.red);
 			float range = getTargetRange();
 
 			// Move closer?
-			if(range > MIN_FIRING_RANGE)
-				setMovement(1.2f * Mathf.Sign(getTargetRange())); // walk quickly toward noise
+			if(range > MIN_FIRING_RANGE) setMovement(1.2f * Mathf.Sign(getTargetRange())); // walk quickly toward noise
 			else view.stand();
 
 			// Fire gun?
-			if(range < MAX_FIRING_RANGE && lastPlayerSighting != null)
-				view.fireGun();
+			if(range < MAX_FIRING_RANGE && lastPlayerSighting != null) view.fireGun();
 
 			stateTimer = Random.Range(.35f, 1f);
 			return;
 		}
 
 		stateTimer -= Time.deltaTime;
-		if(stateTimer <= 0) switchState(fightingState);
+		if(stateTimer <= 0) setState(fightingState);
 	}
 
 	// TODO Add stunned state, stunned moment before taking/resuming action
@@ -296,4 +310,12 @@ public enum AnxietyGroup
 	Calm,
 	Worried,
 	Alarmed
+}
+
+public enum EnemyRunMode
+{
+	Paused,
+	Running,
+	RunScript,
+	StopScript,
 }

@@ -10,23 +10,32 @@ public class Game : MonoBehaviour
 	public EnemyStat[] enemyStats;
 	public float enemyPlacementOffset;
 	private Vector3 enemyPlaceholder;
+	private Cameraman cameraman;
+	private PlayerController playerController;
+	private Transform reset;
 
 	public void Awake()
 	{
 		enemyPlaceholder = transform.Find("EnemyPlaceholder").position;
+		cameraman = Camera.main.GetComponent<Cameraman>();
+		playerController = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerController>();
+		reset = transform.Find("/Game/Reset");
 	}
 
 	public void Start()
 	{
-		Camera.main.GetComponent<Cameraman>().setGoal(CameramanTarget.None);
-		GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerController>().enabled = false;
+		cameraman.target = null;
+		playerController.enabled = false;
 		SoundManager.instance.play("theme");
 	}
 
 	public void skipIntro()
 	{
-		GameObject.Find("/Titling").SetActive(false);
-		startGame();
+		GameObject titling = GameObject.Find("/Titling");
+		if(titling != null) titling.SetActive(false);
+		removeEnemies();
+		addEnemies();
+		initGame();
 	}
 
 	public void startGame(Button startButton)
@@ -39,23 +48,35 @@ public class Game : MonoBehaviour
 	public void startScript()
 	{
 		addEnemies();
-		startGame();
+		cameraman.setTarget(playerController.transform, 4f);
+		Invoke("initGame", 7f);
 	}
 
-	public void startGame()
+	public void initGame()
 	{
-		GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerController>().enabled = true;
-		Camera.main.GetComponent<Cameraman>().setGoal(CameramanTarget.Main);
+		playerController.enabled = true;
+		cameraman.setTarget(playerController.transform, -0.25f);
+		EnemyBehavior.runMode = EnemyRunMode.StopScript;
+	}
+
+	public void removeEnemies()
+	{
+		foreach(Transform child in reset)
+		{
+			GameObject.Destroy(child.gameObject);
+		}
 	}
 
 	public void addEnemies()
 	{
 		enemyStats.Shuffle();
+		Vector3 pos = enemyPlaceholder;
 		foreach (EnemyStat stat in enemyStats)
 		{
-			GameObject go = (GameObject) Instantiate(enemyPrefab, enemyPlaceholder, Quaternion.identity);
+			GameObject go = (GameObject) Instantiate(enemyPrefab, pos, Quaternion.identity);
 			Debug.Assert(go != null);
 			go.name = stat.name;
+			go.transform.parent = reset;
 
 			EnemyView view = go.GetComponent<EnemyView>();
 			Debug.Assert(view != null);
@@ -68,9 +89,7 @@ public class Game : MonoBehaviour
 			behavior.speedModifier = stat.speed;
 
 			// Move placeholder to next position
-			Vector3 pos = enemyPlaceholder;
 			pos.x += enemyPlacementOffset;
-			enemyPlaceholder = pos;
 		}
 	}
 }

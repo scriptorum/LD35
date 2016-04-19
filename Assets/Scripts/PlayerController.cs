@@ -15,6 +15,9 @@ public class PlayerController : MonoBehaviour
 
 	public void onMovement(InputEvent evt)
 	{
+		if(!enabled)
+			return;
+		
 		// No motion - slow down player gradually
 		if(evt.axis.x == 0)
 			hunter.isMoving = view.decelerate();
