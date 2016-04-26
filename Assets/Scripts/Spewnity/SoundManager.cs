@@ -94,23 +94,33 @@ namespace Spewnity
 		}
 			
 		// Returns the Sound object associated with the supplied name.
-		Sound getSound(string name)
+		Sound getSound(string soundName)
 		{
-			if(!nameToSound.ContainsKey(name)) throw new UnityException("Cannot play sound '" + name + "': not found");
-			Sound snd = sounds[nameToSound[name]];
-			return snd;
+			if(!nameToSound.ContainsKey(soundName)) throw new UnityException("Cannot find sound named '" + soundName + "'");
+			Sound sound = sounds[nameToSound[soundName]];
+			return sound;
+		}
+
+		// Returns the AudioSource associated with this sound.
+		// Use this to manipulate the AudioSource directly, for example to call PlayOneShot().
+		// Take care if Sound.usePool is true, as the AudioSource will be thrown back into the pool
+		// when the sound is done playing.
+		AudioSource getSource(string soundName)
+		{
+			Sound sound = getSound(soundName);
+			return sound.source;
 		}
 
 		// Plays the Sound associated with the supplied name.
 		public void play(string name)
 		{			
-			Sound snd = getSound(name);
+			Sound sound = getSound(name);
 
-			float pitch = snd.pitch + Random.Range(-snd.pitchVariation, snd.pitchVariation);
-			float volume = snd.volume + Random.Range(-snd.volumeVariation, snd.volumeVariation);
-			float pan = snd.pan + Random.Range(-snd.panVariation, snd.panVariation);
+			float pitch = sound.pitch + Random.Range(-sound.pitchVariation, sound.pitchVariation);
+			float volume = sound.volume + Random.Range(-sound.volumeVariation, sound.volumeVariation);
+			float pan = sound.pan + Random.Range(-sound.panVariation, sound.panVariation);
 
-			playAs(snd, pitch, volume, pan, snd.looping);
+			playAs(sound, pitch, volume, pan, sound.looping);
 		}
 
 		public void playAs(string name, float pitch = 1.0f, float volume = 1.0f, float pan = 0.0f, bool loop = false)
@@ -188,7 +198,6 @@ namespace Spewnity
 
 		[Tooltip("Base volume is 1.0")]
 		public float volume;
-		// lame, this should be initial volume with default of 1.0f
 
 		[Tooltip("Final volume will be adusted randomly +/- this value")]
 		public float volumeVariation;

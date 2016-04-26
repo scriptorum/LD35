@@ -18,6 +18,7 @@ namespace Spewnity
 				yield return null;
 				t += Time.deltaTime / duration;
 				tform.position = Vector3.Lerp(startPos, endPos, (curve == null ? t : curve.Evaluate(t)));
+				Debug.Log("LerpPosition start:" + startPos + " end:" + endPos + " t:" + t);
 			}
 		
 			if(onComplete != null)

@@ -24,7 +24,7 @@ public class Game : MonoBehaviour
 
 	public void Start()
 	{
-		cameraman.target = null;
+		cameraman.disableTracking();
 		playerController.enabled = false;
 		SoundManager.instance.play("theme");
 	}
@@ -48,14 +48,14 @@ public class Game : MonoBehaviour
 	public void startScript()
 	{
 		addEnemies();
-		cameraman.setTarget(playerController.transform, 4f);
+		cameraman.dollyTo(7f, playerController.transform.position.x, null, null, null);
 		Invoke("initGame", 7f);
 	}
 
 	public void initGame()
 	{
 		playerController.enabled = true;
-		cameraman.setTarget(playerController.transform, -0.25f);
+		cameraman.enableTracking();
 		EnemyBehavior.runMode = EnemyRunMode.StopScript;
 	}
 

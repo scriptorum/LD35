@@ -54,7 +54,7 @@ public class HunterView : MonoBehaviour
 		bool flipped = facing < 0;
 		eyes.setFlipped(flipped);
 		mouth.setFlipped(flipped);
-		cameraman.offsetX = cameraPosition * (flipped ? -1 : 1);
+		cameraman.leading.x = (flipped ? -1 : 1) * Mathf.Abs(cameraman.leading.x);
 	}
 
 	public Color getColor(string htmlColor)
