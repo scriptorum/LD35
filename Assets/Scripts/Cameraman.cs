@@ -68,7 +68,6 @@ public class Cameraman : MonoBehaviour
 			                 (y == null ? transform.position.y : (float) y), 
 			                 transform.position.z);
 		StartCoroutine(transform.LerpPosition(target, duration, curve, onComplete));
-		Debug.Log("Lerping from " + transform.position + " to " + target + " over " + duration + " sec");
 	}
 
 	// TODO this will conflict with dollying

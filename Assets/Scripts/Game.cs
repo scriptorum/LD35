@@ -14,7 +14,7 @@ public class Game : MonoBehaviour
 	private Cameraman cameraman;
 	private PlayerController playerController;
 	private Transform reset;
-	private int scriptStep = 0;
+	private ActionQueue script;
 
 	public void Awake()
 	{
@@ -22,14 +22,7 @@ public class Game : MonoBehaviour
 		cameraman = Camera.main.GetComponent<Cameraman>();
 		playerController = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerController>();
 		reset = transform.Find("/Game/Reset");
-		scriptStep = 0;
-	}
-
-	public void Start()
-	{
-		cameraman.disableTracking();
-		playerController.enabled = false;
-		SoundManager.instance.play("theme");
+		script = gameObject.AddComponent<ActionQueue>();
 	}
 
 	public void skipIntro()
@@ -41,9 +34,19 @@ public class Game : MonoBehaviour
 		initGame();
 	}
 
-	public void startGame(Button startButton)
+	public void Start()
+	{
+		cameraman.disableTracking();
+		playerController.enabled = false;
+		SoundManager.instance.play("theme");
+	}
+
+	public void startGame()
 	{	
-		startButton.interactable = false;
+		Button button = GameObject.Find("/Titling/Button").GetComponent<Button>();
+		if(!button.interactable) return;
+		
+		button.interactable = false;
 		CanvasGroup titling = GameObject.Find("/Titling").GetComponent<CanvasGroup>();
 		StartCoroutine(titling.alpha.LerpFloat(0f, 2f, (float a) => titling.alpha = a, null, startScript));
 	}
@@ -51,25 +54,19 @@ public class Game : MonoBehaviour
 	public void startScript()
 	{
 		addEnemies();
-		cameraman.dollyTo(7f, playerController.transform.position.x, null, null, null);
-		Invoke("nextStep", 8f);
-	}
-
-	public void nextStep()
-	{
-		scriptStep++;
-		Invoke("speakMacReady", 2f);
-	}
-
-	public void speakMacReady()
-	{
-		if(scriptStep > 4)
-		{
-			initGame();
-			return;
-		}
-
-		SoundManager.instance.play("macready" + scriptStep, (snd) => nextStep());
+		cameraman.dollyTo(7f, GameObject.Find("MacReady").transform.position.x, null, null, null);
+		script
+			.Delay(8f)
+			.PlaySound("macready1")
+			.Delay(2f)
+			.PlaySound("macready2")
+			.Delay(2f)
+			.PlaySound("macready3")
+			.Delay(3f)
+			.PlaySound("macready4")
+			.Delay(2f)
+			.Add(initGame)
+			.Run();
 	}
 
 	public void initGame()
@@ -103,15 +100,14 @@ public class Game : MonoBehaviour
 			}
 		}
 		Debug.Assert(macReady != null);
-		EnemyStat[] shuffleStats = enemyStats.ToArray().Shuffle();;
+		EnemyStat[] shuffleStats = enemyStats.ToArray().Shuffle();
 		enemyStats.Clear();
 		enemyStats.Add((EnemyStat) macReady);
-		foreach(EnemyStat enemy in shuffleStats)
-			enemyStats.Add(enemy);
+		foreach(EnemyStat enemy in shuffleStats) enemyStats.Add(enemy);
 			
 		// Place all enemies
 		Vector3 pos = enemyPlaceholder;
-		foreach (EnemyStat stat in enemyStats)
+		foreach(EnemyStat stat in enemyStats)
 		{
 			GameObject go = (GameObject) Instantiate(enemyPrefab, pos, Quaternion.identity);
 			Debug.Assert(go != null);
@@ -142,3 +138,4 @@ public struct EnemyStat
 	public GarmentType garment;
 	public float speed;
 }
+	
