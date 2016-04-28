@@ -15,8 +15,8 @@ public class EnemyBehavior : MonoBehaviour
 	private float targetAnxiety = 0f;
 	private float stateTimer = 0f;
 	private float lastRange;
-	private float endDirection = -1f;
-	private float startDirection = 1f;
+	private float endDirection = 1f;
+	private float startDirection = -1f;
 	private float targetTimer;
 	private System.Nullable<Vector3> lastPlayerSighting;
 	private Vector3 lastNoiseHeard;

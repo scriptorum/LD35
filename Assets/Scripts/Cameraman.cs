@@ -1,19 +1,12 @@
 ﻿/*
  *  REFACTOR GOALS:
- *   - Should be useable for both ongoing orders, such as FOLLOWING TARGET and immediate orders such as PAN HERE NOW
- *   - Should be able to work with a container class to better handle camera shakes and zoom bouncing
- *   - Only expected to work with a flat 2D camera, however, should allow lerping on the Z
- *   - Should be able to freeze any of the axes
- *   - Should support some traditional camera techniques:
- *     + Dolly/Track/Pedestal (scroll camera)
- *     + Tilt/Pan/Zoom//Dolly-counter-zoom (fix camera, but rotate to aim at subject ... req. perspective)
- *   - Support effects: shaking, handheld camera, handheld zoom, rotate shake, edge bounce
- *   - Should allow animation curves along with timing
+ *   - Zoom bouncing
+ *   - Perspective camera tricks: tilt/pan/dolly-counter-zoom/aim-at
+ *   - handheld camera, handheld zoom, rotate shake, edge bounce
  *   - Support storing of waypoints? Support queuing of camera moves? Static, reusable, named queues in inspector?
- *   - Support leading/off-center position of targets (offset XY)
  *   - Support screw zoom
- *   - Support callbacks
  *   - Support only tracking targets that are off-screen or within certain distance of screen edge.
+ *   - Tooltips
  */
 
 using UnityEngine;
@@ -33,6 +26,11 @@ public class Cameraman : MonoBehaviour
 	public bool doNotTrackY = false;
 	[HideInInspector]
 	public Vector3 velocity = Vector3.zero;
+
+	void Awake()
+	{
+		checkHarness();
+	}
 
 	public void trackTarget(Transform target, float? speed = null, Vector2? leading = null)
 	{
@@ -63,7 +61,6 @@ public class Cameraman : MonoBehaviour
 	}
 
 	// TODO this will conflict with zooming
-	// TODO Must have ability to cancel lerp!
 	public void dollyTo(float duration, float? x = null, float?y = null, AnimationCurve curve = null, System.Action<Transform> onComplete = null)
 	{
 		disableTracking();
@@ -87,7 +84,7 @@ public class Cameraman : MonoBehaviour
 		// The Camera should have a parent game object at 0,0,0 to act as a harness.
 		// If one is not supplied, the camera itself will shake, which can conflict
 		// with other camera operations.
-		if(cameraHarness == null) cameraHarness = transform;
+		cameraHarness = checkHarness();
 		shakeTimer = duration;
 		if(amount != null) shakeAmount = (Vector3) amount;
 	}
@@ -118,5 +115,16 @@ public class Cameraman : MonoBehaviour
 					Random.Range(-shakeAmount.z, shakeAmount.z));
 			cameraHarness.position = pos;
 		}
+	}
+
+	private Transform checkHarness()
+	{
+		if(cameraHarness == null)
+			return transform;
+
+		if(cameraHarness.position.magnitude != 0)
+			Debug.Log("Warning: Camera harness should have a 0,0,0 position.");
+
+		return cameraHarness;
 	}
 }

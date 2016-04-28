@@ -1,18 +1,20 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using System.Collections.Generic;
 using Spewnity;
 
 public class Game : MonoBehaviour
 {
 	public GameObject enemyPrefab;
 	public GameObject playerPrefab;
-	public EnemyStat[] enemyStats;
+	public List<EnemyStat> enemyStats;
 	public float enemyPlacementOffset;
 	private Vector3 enemyPlaceholder;
 	private Cameraman cameraman;
 	private PlayerController playerController;
 	private Transform reset;
+	private int scriptStep = 0;
 
 	public void Awake()
 	{
@@ -20,6 +22,7 @@ public class Game : MonoBehaviour
 		cameraman = Camera.main.GetComponent<Cameraman>();
 		playerController = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerController>();
 		reset = transform.Find("/Game/Reset");
+		scriptStep = 0;
 	}
 
 	public void Start()
@@ -49,11 +52,29 @@ public class Game : MonoBehaviour
 	{
 		addEnemies();
 		cameraman.dollyTo(7f, playerController.transform.position.x, null, null, null);
-		Invoke("initGame", 7f);
+		Invoke("nextStep", 8f);
+	}
+
+	public void nextStep()
+	{
+		scriptStep++;
+		Invoke("speakMacReady", 2f);
+	}
+
+	public void speakMacReady()
+	{
+		if(scriptStep > 4)
+		{
+			initGame();
+			return;
+		}
+
+		SoundManager.instance.play("macready" + scriptStep, (snd) => nextStep());
 	}
 
 	public void initGame()
 	{
+		CancelInvoke();
 		playerController.enabled = true;
 		cameraman.enableTracking();
 		EnemyBehavior.runMode = EnemyRunMode.StopScript;
@@ -69,7 +90,26 @@ public class Game : MonoBehaviour
 
 	public void addEnemies()
 	{
-		enemyStats.Shuffle();
+		// Shuffle enemies
+		// Force MacReady to the front
+		EnemyStat? macReady = null;
+		foreach(EnemyStat enemy in enemyStats)
+		{
+			if(enemy.name == "MacReady")
+			{
+				macReady = (EnemyStat) enemy;
+				enemyStats.Remove(enemy);
+				break;
+			}
+		}
+		Debug.Assert(macReady != null);
+		EnemyStat[] shuffleStats = enemyStats.ToArray().Shuffle();;
+		enemyStats.Clear();
+		enemyStats.Add((EnemyStat) macReady);
+		foreach(EnemyStat enemy in shuffleStats)
+			enemyStats.Add(enemy);
+			
+		// Place all enemies
 		Vector3 pos = enemyPlaceholder;
 		foreach (EnemyStat stat in enemyStats)
 		{
