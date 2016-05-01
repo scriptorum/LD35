@@ -29,6 +29,12 @@ public class Game : MonoBehaviour
 	{
 		GameObject titling = GameObject.Find("/Titling");
 		if(titling != null) titling.SetActive(false);
+
+		script.Clear();
+		CancelInvoke();
+		SoundManager.instance.Stop("theme");
+		StopAllCoroutines();
+
 		removeEnemies();
 		addEnemies();
 		initGame();
@@ -38,7 +44,7 @@ public class Game : MonoBehaviour
 	{
 		cameraman.disableTracking();
 		playerController.enabled = false;
-		SoundManager.instance.play("theme");
+		SoundManager.instance.Play("theme");
 	}
 
 	public void startGame()
@@ -53,10 +59,13 @@ public class Game : MonoBehaviour
 
 	public void startScript()
 	{
+		EnemyBehavior.changeRunMode.Invoke(EnemyRunMode.RunScript, null);
 		addEnemies();
 		cameraman.dollyTo(7f, GameObject.Find("MacReady").transform.position.x, null, null, null);
 		script
+			.Add(() => EnemyBehavior.changeRunMode.Invoke(EnemyRunMode.StartScript, "burp"))
 			.Delay(8f)
+			.Add(() => SoundManager.instance.GetSource("theme").volume *= 0.4f)
 			.PlaySound("macready1")
 			.Delay(2f)
 			.PlaySound("macready2")
@@ -65,16 +74,16 @@ public class Game : MonoBehaviour
 			.Delay(3f)
 			.PlaySound("macready4")
 			.Delay(2f)
+			.Add(() => SoundManager.instance.FadeOut("theme", 1f))
 			.Add(initGame)
 			.Run();
 	}
 
 	public void initGame()
 	{
-		CancelInvoke();
 		playerController.enabled = true;
 		cameraman.enableTracking();
-		EnemyBehavior.runMode = EnemyRunMode.StopScript;
+		EnemyBehavior.changeRunMode.Invoke(EnemyRunMode.StopScript, null);
 	}
 
 	public void removeEnemies()

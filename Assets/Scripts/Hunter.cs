@@ -33,12 +33,12 @@ public class Hunter : MonoBehaviour
 		health--;
 		if(health <= 0)
 		{
-			SoundManager.instance.play("player-dead");
+			SoundManager.instance.Play("player-dead");
 			view.die();
 		}
 		else
 		{
-			SoundManager.instance.play("player-hurt");
+			SoundManager.instance.Play("player-hurt");
 			view.hurt();
 		}
 	}

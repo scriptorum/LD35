@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Events;
 using System.Collections;
 using Spewnity;
 
@@ -10,7 +11,8 @@ public class EnemyBehavior : MonoBehaviour
 	public static float MAX_ANXIETY = 14f;
 	public static float ANXIETY_GROWTH = 0.5f;
 	public static float TIME_UNTIL_FORGET_TARGET = 5f;
-	public static EnemyRunMode runMode = EnemyRunMode.Paused;
+	public static EnemyEvent changeRunMode = new EnemyEvent();
+
 	private float anxiety = 0f;
 	private float targetAnxiety = 0f;
 	private float stateTimer = 0f;
@@ -20,19 +22,28 @@ public class EnemyBehavior : MonoBehaviour
 	private float targetTimer;
 	private System.Nullable<Vector3> lastPlayerSighting;
 	private Vector3 lastNoiseHeard;
-	private EnemyView view;
+	public EnemyView view;
 	private  AnxietyGroup anxietyGroup;
 	private System.Action stateFunc = null;
 	public string currentState;
 	private AnxietyGroup lastAnxietyGroup;
-	private bool stateIsInitializing = true;
+	public bool stateIsInitializing = true;
 	public float anxietyDropRate = 2f;
 	public float speedModifier = 1f;
 	public bool armed = false;
+	public EnemyRunMode runMode = EnemyRunMode.Paused;
 
 	void Awake()
 	{
 		view = gameObject.GetComponent<EnemyView>();
+		changeRunMode.AddListener((mode, method) =>
+		{
+			this.runMode = mode;
+
+			if(method == null) this.stateFunc = null;
+			else
+				stateFunc = (System.Action) System.Delegate.CreateDelegate(typeof(System.Action), this, method);
+		});
 	}
 
 	void Update()
@@ -42,13 +53,19 @@ public class EnemyBehavior : MonoBehaviour
 			case EnemyRunMode.Paused:
 				return;
 
-			case EnemyRunMode.RunScript:
-				scriptState();
+			case EnemyRunMode.StartScript:
+				stateIsInitializing = true;
+				stateFunc();
+				stateIsInitializing = false;
+				runMode = EnemyRunMode.RunScript;
 				return;
-			
+
+			case EnemyRunMode.RunScript:
+				stateFunc();
+				return;
+
 			case EnemyRunMode.StopScript:
-				// If stateFunc's null, this is second StopScript, we can turn it off now for the others
-				if(stateFunc != null) runMode = EnemyRunMode.Running;
+				runMode = EnemyRunMode.Running;
 				setState(walkingState);
 				break;
 		}
@@ -160,10 +177,8 @@ public class EnemyBehavior : MonoBehaviour
 	}
 		
 	//====================================================================================
-
-	public void scriptState()
-	{
-	}
+	//===== Standard enemy states
+	//====================================================================================
 
 	public void walkingState()
 	{
@@ -303,6 +318,12 @@ public class EnemyBehavior : MonoBehaviour
 	}
 
 	// TODO Add stunned state, stunned moment before taking/resuming action
+
+	public void burp()
+	{
+		Debug.Log(gameObject.name + " isInitializing:" + stateIsInitializing);
+	}
+
 }
 
 public enum AnxietyGroup
@@ -316,6 +337,11 @@ public enum EnemyRunMode
 {
 	Paused,
 	Running,
+	StartScript,
 	RunScript,
 	StopScript,
+}
+
+public class EnemyEvent: UnityEvent<EnemyRunMode, string>
+{
 }

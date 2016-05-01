@@ -42,6 +42,7 @@ public class Cameraman : MonoBehaviour
 
 	public void enableTracking()
 	{
+		StopAllCoroutines();
 		this.isTracking = true;
 	}
 

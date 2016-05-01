@@ -17,7 +17,7 @@ public class Noise: MonoBehaviour
 
 	public void create(NoiseType noiseType, string owner)
 	{
-		SoundManager.instance.play(noiseType.name);
+		SoundManager.instance.Play(noiseType.name);
 		this.noiseType = noiseType;
 		this.owner = owner;
 
