@@ -34,6 +34,7 @@ public class Game : MonoBehaviour
 		CancelInvoke();
 		SoundManager.instance.Stop("theme");
 		StopAllCoroutines();
+		cameraman.cutTo(null, 1.25f);
 
 		removeEnemies();
 		addEnemies();
@@ -42,13 +43,46 @@ public class Game : MonoBehaviour
 
 	public void Start()
 	{
+		CanvasRenderer text1 = GameObject.Find("/Titling/Text1").GetComponent<CanvasRenderer>();
+		CanvasRenderer text2 = GameObject.Find("/Titling/Text2").GetComponent<CanvasRenderer>();
+		CanvasRenderer text3 = GameObject.Find("/Titling/Text3").GetComponent<CanvasRenderer>();
+		Image fadeIn = GameObject.Find("/Titling/FadeIn").GetComponent<Image>();
+		Button button = GameObject.Find("/Titling/Button").GetComponent<Button>();
+		CanvasGroup buttonCanvas = GameObject.Find("/Titling/Button").GetComponent<CanvasGroup>();
+
+		text1.SetAlpha(0f);
+		text2.SetAlpha(0f);
+		text3.SetAlpha(0f);
+		button.interactable = false;
+		buttonCanvas.alpha = 0f;
+
 		cameraman.disableTracking();
 		playerController.enabled = false;
 		SoundManager.instance.Play("theme");
+
+		script
+			.Delay(2f)
+			.Add(() =>
+			{
+				StartCoroutine(fadeIn.color.LerpColor(Color.clear, 2.0f, (c) => fadeIn.color = c, null, null));
+			})
+			.Add(() => cameraman.dollyTo(6f, null, 1.25f))
+			.Delay(1f)
+			.Add(() => StartCoroutine(0f.LerpFloat(1f, 1f, (v) => text1.SetAlpha(v))))
+			.Delay(2f)
+			.Add(() => StartCoroutine(0f.LerpFloat(1f, 1f, (v) => text2.SetAlpha(v))))
+			.Delay(1.75f)
+			.Add(() => StartCoroutine(0f.LerpFloat(1f, 1f, (v) => text3.SetAlpha(v))))
+			.Delay(2f)
+			.Add(() => StartCoroutine(0f.LerpFloat(1f, 1f, (v) => buttonCanvas.alpha = v)))
+			.Add(() => GameObject.Destroy(fadeIn.gameObject))
+			.Add(() => button.interactable = true)
+			.Run();
 	}
 
 	public void startGame()
 	{	
+		Debug.Log("Starting game");
 		Button button = GameObject.Find("/Titling/Button").GetComponent<Button>();
 		if(!button.interactable) return;
 		
