@@ -46,7 +46,7 @@ public class Game : MonoBehaviour
 
 	public void Start()
 	{
-		EnemyBehavior.setRunMode(EnemyRunMode.RunScript);
+		EnemyBehavior.setRunModeForAll(EnemyRunMode.RunScript);
 		CanvasRenderer text1 = GameObject.Find("/Titling/Text1").GetComponent<CanvasRenderer>();
 		CanvasRenderer text2 = GameObject.Find("/Titling/Text2").GetComponent<CanvasRenderer>();
 		CanvasRenderer text3 = GameObject.Find("/Titling/Text3").GetComponent<CanvasRenderer>();
@@ -117,6 +117,8 @@ public class Game : MonoBehaviour
 		addEnemies();
 
 		GameObject macReadyGO = (GameObject) GameObject.Find("MacReady");
+		EnemyBehavior.stateTarget = macReadyGO.transform;
+
 		EnemyView macReadyView = macReadyGO.GetComponent<EnemyView>();
 		macReadyView.setFacing(true);
 		EnemyBehavior macReadyBehavior = macReadyGO.GetComponent<EnemyBehavior>();
@@ -127,6 +129,7 @@ public class Game : MonoBehaviour
 		benningsView.accelerate(-4.5f);
 
 		HunterView playerView = (HunterView) playerController.gameObject.GetComponent<HunterView>();
+
 
 		script
 			.Add(() => macReadyView.fireGun())
@@ -181,7 +184,7 @@ public class Game : MonoBehaviour
 	{
 		playerController.enabled = true;
 		cameraman.trackTarget(playerController.gameObject.transform, null, new Vector2(1.5f, 0));
-		EnemyBehavior.setRunMode(EnemyRunMode.StopScript);
+		EnemyBehavior.setRunModeForAll(EnemyRunMode.StopScript);
 	}
 
 	public void removeEnemies()

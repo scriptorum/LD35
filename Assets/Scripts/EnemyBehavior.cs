@@ -11,7 +11,7 @@ public class EnemyBehavior : MonoBehaviour
 	public static float MAX_ANXIETY = 14f;
 	public static float ANXIETY_GROWTH = 0.5f;
 	public static float TIME_UNTIL_FORGET_TARGET = 5f;
-	private static EnemyEvent changeRunMode = new EnemyEvent();
+	private static RunModeChanged changeRunMode = new RunModeChanged();
 	private static EnemyRunMode globalRunMode = EnemyRunMode.Paused;
 
 	private float anxiety = 0f;
@@ -44,7 +44,7 @@ public class EnemyBehavior : MonoBehaviour
 		});
 	}
 
-	public static void setRunMode(EnemyRunMode mode)
+	public static void setRunModeForAll(EnemyRunMode mode)
 	{
 		globalRunMode = mode;
 		changeRunMode.Invoke(EnemyRunMode.RunScript);
@@ -58,6 +58,8 @@ public class EnemyBehavior : MonoBehaviour
 				return;
 
 			case EnemyRunMode.RunScript:
+				if(stateFunc == null)
+					setState(stare);
 				updateState();
 				return;
 
@@ -107,8 +109,7 @@ public class EnemyBehavior : MonoBehaviour
 	{
 		stateIsInitializing = true;
 		stateFunc = func;
-		if(stateFunc != null)
-			stateFunc();
+		if(stateFunc != null) stateFunc();
 	}
 
 	public void updateState()
@@ -321,8 +322,7 @@ public class EnemyBehavior : MonoBehaviour
 	public void talk()
 	{
 		Debug.Log(gameObject.name + " is talking! Init:" + stateIsInitializing + " timer:" + stateTimer);
-		if(stateIsInitializing)
-			stateTimer = 0f;
+		if(stateIsInitializing) stateTimer = 0f;
 		else stateTimer -= Time.deltaTime;
 
 		if(stateTimer <= 0f)
@@ -334,10 +334,15 @@ public class EnemyBehavior : MonoBehaviour
 
 	public void quiet()
 	{
-		if(stateIsInitializing)
-			view.setMouth(MouthType.Closed);
+		if(stateIsInitializing) view.setMouth(MouthType.Closed);
 	}
 
+	public static Transform stateTarget;
+
+	public void stare()
+	{		
+		view.setFacing(stateTarget.position.x < 0);
+	}
 }
 
 public enum AnxietyGroup
@@ -355,6 +360,11 @@ public enum EnemyRunMode
 	StopScript,
 }
 
-public class EnemyEvent: UnityEvent<EnemyRunMode>
+public class RunModeChanged: UnityEvent<EnemyRunMode>
 {
 }
+
+public class StateChanged: UnityEvent<System.Action>
+{
+}
+
