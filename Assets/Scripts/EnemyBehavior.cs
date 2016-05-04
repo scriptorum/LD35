@@ -11,7 +11,8 @@ public class EnemyBehavior : MonoBehaviour
 	public static float MAX_ANXIETY = 14f;
 	public static float ANXIETY_GROWTH = 0.5f;
 	public static float TIME_UNTIL_FORGET_TARGET = 5f;
-	public static EnemyEvent changeRunMode = new EnemyEvent();
+	private static EnemyEvent changeRunMode = new EnemyEvent();
+	private static EnemyRunMode globalRunMode = EnemyRunMode.Paused;
 
 	private float anxiety = 0f;
 	private float targetAnxiety = 0f;
@@ -25,7 +26,6 @@ public class EnemyBehavior : MonoBehaviour
 	public EnemyView view;
 	private  AnxietyGroup anxietyGroup;
 	private System.Action stateFunc = null;
-	public string currentState;
 	private AnxietyGroup lastAnxietyGroup;
 	public bool stateIsInitializing = true;
 	public float anxietyDropRate = 2f;
@@ -36,14 +36,18 @@ public class EnemyBehavior : MonoBehaviour
 	void Awake()
 	{
 		view = gameObject.GetComponent<EnemyView>();
-		changeRunMode.AddListener((mode, method) =>
+		runMode = globalRunMode;
+		changeRunMode.AddListener((mode) =>
 		{
 			this.runMode = mode;
-
-			if(method == null) this.stateFunc = null;
-			else
-				stateFunc = (System.Action) System.Delegate.CreateDelegate(typeof(System.Action), this, method);
+			stateFunc = null;
 		});
+	}
+
+	public static void setRunMode(EnemyRunMode mode)
+	{
+		globalRunMode = mode;
+		changeRunMode.Invoke(EnemyRunMode.RunScript);
 	}
 
 	void Update()
@@ -53,15 +57,8 @@ public class EnemyBehavior : MonoBehaviour
 			case EnemyRunMode.Paused:
 				return;
 
-			case EnemyRunMode.StartScript:
-				stateIsInitializing = true;
-				stateFunc();
-				stateIsInitializing = false;
-				runMode = EnemyRunMode.RunScript;
-				return;
-
 			case EnemyRunMode.RunScript:
-				stateFunc();
+				updateState();
 				return;
 
 			case EnemyRunMode.StopScript:
@@ -110,9 +107,8 @@ public class EnemyBehavior : MonoBehaviour
 	{
 		stateIsInitializing = true;
 		stateFunc = func;
-		currentState = func.Method.Name;
-//		Debug.Log(gameObject.name + " is entering " + func + " lastAnxietyFacing:" + lastRange);
-		stateFunc();
+		if(stateFunc != null)
+			stateFunc();
 	}
 
 	public void updateState()
@@ -319,9 +315,27 @@ public class EnemyBehavior : MonoBehaviour
 
 	// TODO Add stunned state, stunned moment before taking/resuming action
 
-	public void burp()
+
+	/***************************************************************************/
+
+	public void talk()
 	{
-		Debug.Log(gameObject.name + " isInitializing:" + stateIsInitializing);
+		Debug.Log(gameObject.name + " is talking! Init:" + stateIsInitializing + " timer:" + stateTimer);
+		if(stateIsInitializing)
+			stateTimer = 0f;
+		else stateTimer -= Time.deltaTime;
+
+		if(stateTimer <= 0f)
+		{
+			view.setMouth(view.getMouth() == MouthType.Closed ? MouthType.Talk : MouthType.Closed);
+			stateTimer = Random.Range(0.5f, 0.2f);
+		}
+	}
+
+	public void quiet()
+	{
+		if(stateIsInitializing)
+			view.setMouth(MouthType.Closed);
 	}
 
 }
@@ -337,11 +351,10 @@ public enum EnemyRunMode
 {
 	Paused,
 	Running,
-	StartScript,
 	RunScript,
 	StopScript,
 }
 
-public class EnemyEvent: UnityEvent<EnemyRunMode, string>
+public class EnemyEvent: UnityEvent<EnemyRunMode>
 {
 }

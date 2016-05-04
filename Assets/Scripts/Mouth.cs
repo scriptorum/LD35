@@ -7,6 +7,7 @@ public class Mouth : MonoBehaviour
 	public Sprite closed;
 	public Sprite talk;
 	public Sprite yell;
+	public MouthType type; // read only
 	private SpriteRenderer sr;
 
 	void Awake()
@@ -40,6 +41,7 @@ public class Mouth : MonoBehaviour
 
 		Debug.Assert(sprite != null);
 		sr.sprite = sprite;
+		this.type = type;
 	}
 
 	public void setFlipped(bool flipped)

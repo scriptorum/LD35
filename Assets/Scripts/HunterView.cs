@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using Spewnity;
 
 public class HunterView : MonoBehaviour
 {
@@ -110,6 +111,12 @@ public class HunterView : MonoBehaviour
 		return moving;
 	}
 
+	public void  halt()
+	{
+		velocity = 0f;
+		moving = false;
+	}
+
 	public bool accelerate(float amount)
 	{
 		// Adjust velocity
@@ -128,6 +135,7 @@ public class HunterView : MonoBehaviour
 
 	public void hurt()
 	{
+		SoundManager.instance.Play("player-hurt");
 		bloodspray.Emit(10);
 		mouth.setMouth(MouthType.Talk);
 		eyes.setEyes(EyeType.Squint);
@@ -141,6 +149,11 @@ public class HunterView : MonoBehaviour
 		eyes.setEyes(EyeType.Open);
 	}
 
+	public void setMouth(MouthType type)
+	{
+		mouth.setMouth(type);
+	}
+		
 	public void setTint(Color color)
 	{
 		bodySR.color = color;
@@ -152,8 +165,9 @@ public class HunterView : MonoBehaviour
 	{
 		// TODO Replace with death animation, culminating in dead circle
 //		GameObject.Destroy(gameObject);
+		SoundManager.instance.Play("player-dead");
+
 		dead = true;
-		Debug.Log("TODO: You died");
 		bloodspray.Emit(100);
 		mouth.setMouth(MouthType.Yell);
 		eyes.setEyes(EyeType.Closed);

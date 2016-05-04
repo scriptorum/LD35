@@ -11,11 +11,11 @@ public class Bullet : MonoBehaviour
 		transform.Translate(velocity * Time.deltaTime);
 	}
 
-	public void fire(bool flipped)
+	public void fire(bool flipped, bool shootStraight = false)
 	{
 		SpriteRenderer sr = gameObject.GetComponent<SpriteRenderer>();
 		sr.flipX = flipped;
-		velocity = new Vector3(flipped ? -BULLET_SPEED : BULLET_SPEED, Random.Range(-BULLET_SPEED, BULLET_SPEED)/4, 0);
+		velocity = new Vector3(flipped ? -BULLET_SPEED : BULLET_SPEED, (shootStraight ? 0f : Random.Range(-BULLET_SPEED, BULLET_SPEED)/4), 0);
 
 		Invoke("selfDestruct", 1f);
 	}

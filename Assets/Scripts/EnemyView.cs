@@ -9,7 +9,7 @@ public class EnemyView : MonoBehaviour
 	public static int sortingOrder;
 	public float velocity = 0f;
 	public float targetVelocity = 0f;
-	public bool flipped;
+	public bool flipped = true;
 	public GameObject bulletPrefab;
 	private SpriteRenderer bodySR;
 	private BoxCollider2D visionCollider;
@@ -67,6 +67,11 @@ public class EnemyView : MonoBehaviour
 		transform.Translate(Vector3.right * Time.deltaTime * velocity);
 	}
 
+	public void halt()
+	{
+		targetVelocity = velocity = 0f;
+	}
+
 	public void updateGunMount()
 	{		
 		bool active = this.armed && this.flipped;
@@ -74,7 +79,7 @@ public class EnemyView : MonoBehaviour
 		gun.gameObject.SetActive(active);
 	}
 
-	private void setFacing(bool flipped) // flipped means left
+	public void setFacing(bool flipped) // flipped means left
 	{
 		// Set facing of face sprite
 		eyes.setFlipped(flipped);
@@ -120,7 +125,7 @@ public class EnemyView : MonoBehaviour
 //		wieldingGun = true;
 //	}
 
-	public void fireGun()
+	public void fireGun(bool shootStraight = false)
 	{
 //		gunMount.SetTrigger("fire");
 		NoiseManager.instance.addNoise("gunshot", gameObject);
@@ -128,7 +133,7 @@ public class EnemyView : MonoBehaviour
 		// Shoot bullet
 		GameObject go = (GameObject) Instantiate(bulletPrefab, transform.position, Quaternion.identity);
 		Bullet bullet = go.GetComponent <Bullet>();
-		bullet.fire(flipped);
+		bullet.fire(flipped, shootStraight);
 	}
 
 //	public void holsterGun()
@@ -152,6 +157,11 @@ public class EnemyView : MonoBehaviour
 	public void setMouth(MouthType type)
 	{
 		mouth.setMouth(type);
+	}
+
+	public MouthType getMouth()
+	{
+		return mouth.type;
 	}
 
 	public void setGarment(GarmentType type)

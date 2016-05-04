@@ -35,7 +35,7 @@ public class Cameraman : MonoBehaviour
 	public void trackTarget(Transform target, float? speed = null, Vector2? leading = null)
 	{
 		this.trackingTarget = target;
-		this.leading = (leading == null ? Vector2.zero : (Vector2) leading);
+		if(leading != null) this.leading = (Vector2) leading;
 		if(speed != null) trackingSpeed = (float) speed;
 		enableTracking();
 	}
@@ -48,6 +48,7 @@ public class Cameraman : MonoBehaviour
 
 	public void disableTracking()
 	{
+		StopAllCoroutines();
 		this.isTracking = false;
 	}
 
