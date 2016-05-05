@@ -17,6 +17,7 @@ public class HunterView : MonoBehaviour
 	public float velocity = 0;
 	public float cameraPosition = 0.33f;
 	public Cameraman cameraman;
+	public bool updateCameraLeading = false;
 	private SpriteRenderer bodySR;
 	private ParticleSystem bloodspray;
 	private Color mainColor;
@@ -55,7 +56,9 @@ public class HunterView : MonoBehaviour
 		bool flipped = facing < 0;
 		eyes.setFlipped(flipped);
 		mouth.setFlipped(flipped);
-		cameraman.leading.x = (flipped ? -1 : 1) * Mathf.Abs(cameraman.leading.x);
+
+		if(updateCameraLeading)
+			cameraman.leading.x = ((flipped ? -1 : 1) * Mathf.Abs(cameraman.leading.x));
 	}
 
 	public Color getColor(string htmlColor)

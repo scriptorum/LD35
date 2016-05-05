@@ -37,17 +37,18 @@ public class EnemyBehavior : MonoBehaviour
 	{
 		view = gameObject.GetComponent<EnemyView>();
 		runMode = globalRunMode;
-		changeRunMode.AddListener((mode) =>
+		changeRunMode.AddListener((mode, script) =>
 		{
 			this.runMode = mode;
-			stateFunc = null;
+			if(script == null) stateFunc = null;
+			else setState((System.Action) System.Delegate.CreateDelegate(typeof(System.Action), this, script));
 		});
 	}
 
-	public static void setRunModeForAll(EnemyRunMode mode)
+	public static void setMode(EnemyRunMode mode, string script = null)
 	{
 		globalRunMode = mode;
-		changeRunMode.Invoke(EnemyRunMode.RunScript);
+		changeRunMode.Invoke(EnemyRunMode.RunScript, script);
 	}
 
 	void Update()
@@ -58,8 +59,6 @@ public class EnemyBehavior : MonoBehaviour
 				return;
 
 			case EnemyRunMode.RunScript:
-				if(stateFunc == null)
-					setState(stare);
 				updateState();
 				return;
 
@@ -321,14 +320,13 @@ public class EnemyBehavior : MonoBehaviour
 
 	public void talk()
 	{
-		Debug.Log(gameObject.name + " is talking! Init:" + stateIsInitializing + " timer:" + stateTimer);
 		if(stateIsInitializing) stateTimer = 0f;
 		else stateTimer -= Time.deltaTime;
 
 		if(stateTimer <= 0f)
 		{
 			view.setMouth(view.getMouth() == MouthType.Closed ? MouthType.Talk : MouthType.Closed);
-			stateTimer = Random.Range(0.5f, 0.2f);
+			stateTimer = Random.Range(0.05f, 0.2f);
 		}
 	}
 
@@ -340,8 +338,25 @@ public class EnemyBehavior : MonoBehaviour
 	public static Transform stateTarget;
 
 	public void stare()
-	{		
-		view.setFacing(stateTarget.position.x < 0);
+	{
+		if(stateTarget == transform)
+			return;
+		view.setFacing(stateTarget.position.x < transform.position.x);
+	}
+
+	public void walkInside()
+	{
+		if(stateIsInitializing)
+		{
+			setMovement(2f);
+			stateTimer = 20f;
+		}
+		else if(stateTimer <= 0f) 
+		{
+			view.setMovement(0);
+			setState(null);
+		}
+		else stateTimer -= Time.deltaTime;
 	}
 }
 
@@ -360,7 +375,7 @@ public enum EnemyRunMode
 	StopScript,
 }
 
-public class RunModeChanged: UnityEvent<EnemyRunMode>
+public class RunModeChanged: UnityEvent<EnemyRunMode, string>
 {
 }
 

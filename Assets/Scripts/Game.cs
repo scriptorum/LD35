@@ -28,25 +28,10 @@ public class Game : MonoBehaviour
 		trackTarget = GameObject.Find("/Game/TrackTarget").transform.position;
 	}
 
-	public void skipIntro()
-	{
-		GameObject titling = GameObject.Find("/Titling");
-		if(titling != null) titling.SetActive(false);
-
-		script.Clear();
-		CancelInvoke();
-		SoundManager.instance.Stop("theme");
-		StopAllCoroutines();
-		cameraman.cutTo(null, 1.25f);
-
-		removeEnemies();
-		addEnemies();
-		initGame();
-	}
-
 	public void Start()
 	{
-		EnemyBehavior.setRunModeForAll(EnemyRunMode.RunScript);
+		shuffleEnemies();
+		EnemyBehavior.setMode(EnemyRunMode.RunScript);
 		CanvasRenderer text1 = GameObject.Find("/Titling/Text1").GetComponent<CanvasRenderer>();
 		CanvasRenderer text2 = GameObject.Find("/Titling/Text2").GetComponent<CanvasRenderer>();
 		CanvasRenderer text3 = GameObject.Find("/Titling/Text3").GetComponent<CanvasRenderer>();
@@ -84,8 +69,7 @@ public class Game : MonoBehaviour
 	// Zips through all steps of the Start script
 	public void skipTitling()
 	{
-		if(GameObject.Find("/Titling") == null)
-			return;
+		if(GameObject.Find("/Titling") == null) return;
 
 		StopAllCoroutines();
 		script.Cancel();
@@ -117,19 +101,20 @@ public class Game : MonoBehaviour
 		addEnemies();
 
 		GameObject macReadyGO = (GameObject) GameObject.Find("MacReady");
-		EnemyBehavior.stateTarget = macReadyGO.transform;
-
 		EnemyView macReadyView = macReadyGO.GetComponent<EnemyView>();
-		macReadyView.setFacing(true);
 		EnemyBehavior macReadyBehavior = macReadyGO.GetComponent<EnemyBehavior>();
+		EnemyBehavior.stateTarget = macReadyGO.transform;
+		EnemyBehavior.setMode(EnemyRunMode.RunScript, "stare");
+		macReadyView.setFacing(true);
 
 		GameObject benningsGO = (GameObject) GameObject.Find("Bennings");
 		HunterView benningsView = (HunterView) benningsGO.GetComponent<HunterView>();
 		benningsView.setDisguise(false);
-		benningsView.accelerate(-4.5f);
+		benningsView.accelerate(-4.3f);
 
 		HunterView playerView = (HunterView) playerController.gameObject.GetComponent<HunterView>();
-
+		playerView.setDisguise(true);
+		playerView.setMouth(MouthType.Closed);
 
 		script
 			.Add(() => macReadyView.fireGun())
@@ -153,38 +138,62 @@ public class Game : MonoBehaviour
 			.Add(() => macReadyView.fireGun())
 			.Delay(.2f)
 			.Add(() => macReadyView.fireGun())
-			.Delay(.3f)
-			.Add(() => macReadyView.fireGun(true))
 			.Delay(.2f)
+			.Add(() => macReadyView.fireGun(true))
+			.Delay(.8f)
 			.Add(() => benningsView.die())
 			.Add(() => benningsView.halt())
 			.Delay(2f)
 			.Add(() => macReadyView.setMovement(0))
 			.Delay(3f)
+			.Add(() => cameraman.trackTarget(macReadyGO.transform, 2f, Vector2.zero))
 			.EnemySpeak("macready1", macReadyBehavior)
-			.Add(() => cameraman.trackTarget(macReadyGO.transform, null, Vector2.zero))
+			.Add(() => cameraman.trackTarget(macReadyGO.transform, 0.3f, Vector2.zero))
 			.Add(() => macReadyView.setMovement(1.5f))
 			.Delay(4f)
 			.EnemySpeak("macready2", macReadyBehavior)
-			.Delay(4.2f)
+			.Delay(4.65f)
 			.Add(() => macReadyView.halt())
+			.Delay(0.5f)
 			.Add(() => macReadyView.setFacing(true))
 			.EnemySpeak("macready3", macReadyBehavior)
+			.Delay(1f)
 			.Add(() => playerView.setMouth(MouthType.Smile))
-			.Delay(3f)
+			.Delay(2f)
 			.Add(() => macReadyView.setFacing(false))
 			.EnemySpeak("macready4", macReadyBehavior)
 			.Add(() => playerView.setMouth(MouthType.Closed))
-			.Delay(2f)
+			.Add(() => EnemyBehavior.setMode(EnemyRunMode.RunScript, "walkInside"))
+			.Add(() => cameraman.trackTarget(playerController.gameObject.transform, 0.3f, new Vector2(1.5f, 0)))
+			.Add(() => playerView.updateCameraLeading = true)
+			.Delay(8f)
 			.Add(initGame)
 			.Run();
 	}
 
-	public void initGame()
+	public void skipIntro()
 	{
+		GameObject titling = GameObject.Find("/Titling");
+		if(titling != null) titling.SetActive(false);
+
+		script.Clear();
+		CancelInvoke();
+		SoundManager.instance.Stop("theme");
+		StopAllCoroutines();
+		cameraman.cutTo(null, 1.25f);
+
+		initGame();
+	}
+
+	public void initGame()
+	{		
+		removeEnemies();
+		addEnemies(true, 17f, 10f);
+		cameraman.trackTarget(playerController.gameObject.transform, 0.3f, new Vector2(1.5f, 0));
+		playerController.gameObject.GetComponent<HunterView>().updateCameraLeading = true;
+
+		//		EnemyBehavior.setMode(EnemyRunMode.StopScript);
 		playerController.enabled = true;
-		cameraman.trackTarget(playerController.gameObject.transform, null, new Vector2(1.5f, 0));
-		EnemyBehavior.setRunModeForAll(EnemyRunMode.StopScript);
 	}
 
 	public void removeEnemies()
@@ -195,7 +204,7 @@ public class Game : MonoBehaviour
 		}
 	}
 
-	public void addEnemies()
+	public void shuffleEnemies()
 	{
 		// Shuffle enemies
 		// Force MacReady to the front
@@ -214,9 +223,13 @@ public class Game : MonoBehaviour
 		enemyStats.Clear();
 		foreach(EnemyStat enemy in shuffleStats) enemyStats.Add(enemy);
 		enemyStats.Add((EnemyStat) macReady);
-			
+	}
+
+	public void addEnemies(bool useOffset = false, float xOffset = 0f, float additionalMacOffset = 0f)
+	{
 		// Place all enemies
 		Vector3 pos = enemyPlaceholder;
+		if(useOffset) pos.x += xOffset;
 		foreach(EnemyStat stat in enemyStats)
 		{
 			pos.x += enemyPlacementOffset;
@@ -241,7 +254,7 @@ public class Game : MonoBehaviour
 		// Move MacReady to start of queue
 		Transform macT = ((GameObject) GameObject.Find("MacReady")).transform;
 		pos = macT.position;
-		pos.x = enemyPlaceholder.x;
+		pos.x = useOffset ? enemyPlaceholder.x + xOffset + additionalMacOffset : enemyPlaceholder.x;
 		macT.position = pos;
 	}
 }
